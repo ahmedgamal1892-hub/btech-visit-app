@@ -1,7 +1,12 @@
-import { CheckCircle2, Eye, LayoutDashboard, Plus } from 'lucide-react'
+import {
+  CheckCircle2,
+  ClipboardList,
+  LayoutDashboard,
+  Plus,
+} from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
+import { PrimaryButton, SecondaryButton } from '@/components/ui/action-buttons'
 import {
   Card,
   CardContent,
@@ -48,40 +53,42 @@ export function VisitSubmitSuccessPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col items-center py-6 sm:py-10">
-      <div className="flex size-16 items-center justify-center rounded-full bg-success/10 text-success">
-        <CheckCircle2 className="size-8" aria-hidden="true" />
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-8 sm:py-12">
+      <div className="animate-in fade-in zoom-in-95 flex size-24 items-center justify-center rounded-full bg-success/10 text-success duration-500">
+        <CheckCircle2 className="size-12" aria-hidden="true" />
       </div>
 
-      <h2 className="page-title mt-6 text-center">
-        Visit submitted successfully.
+      <h2 className="mt-8 text-center text-3xl font-bold tracking-tight text-foreground">
+        Visit Submitted Successfully
       </h2>
-      <p className="mt-2 text-center text-sm text-muted-foreground">
-        Your visit has been saved and is ready to review.
+      <p className="mt-3 max-w-xl text-center text-sm text-muted-foreground sm:text-base">
+        Your visit has been saved and is ready for review in the visit history.
       </p>
 
-      <Card className="mt-8 w-full rounded-2xl border-border/70 shadow-sm">
+      <Card className="mt-8 w-full rounded-2xl border-border/70 shadow-lg">
         <CardHeader className="text-center sm:text-left">
-          <CardTitle className="text-xl">{state.visitNumber}</CardTitle>
+          <CardTitle className="text-2xl text-primary">
+            {state.visitNumber}
+          </CardTitle>
           <CardDescription>Visit reference number</CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-sm text-muted-foreground">Submitted</dt>
-              <dd className="mt-1 font-medium text-foreground">
-                {formatSubmittedAt(state.submittedAt)}
-              </dd>
-            </div>
-            <div>
+            <div className="rounded-xl border border-border/60 bg-muted/15 p-4">
               <dt className="text-sm text-muted-foreground">Branch</dt>
-              <dd className="mt-1 font-medium text-foreground">
+              <dd className="mt-1 font-semibold text-foreground">
                 {state.branchName}
               </dd>
             </div>
-            <div className="sm:col-span-2">
+            <div className="rounded-xl border border-border/60 bg-muted/15 p-4">
+              <dt className="text-sm text-muted-foreground">Submission Time</dt>
+              <dd className="mt-1 font-semibold text-foreground">
+                {formatSubmittedAt(state.submittedAt)}
+              </dd>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/15 p-4 sm:col-span-2">
               <dt className="text-sm text-muted-foreground">Visitor</dt>
-              <dd className="mt-1 font-medium text-foreground">
+              <dd className="mt-1 font-semibold text-foreground">
                 {state.visitorName}
               </dd>
             </div>
@@ -89,30 +96,29 @@ export function VisitSubmitSuccessPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-        <Button
+      <div className="mt-8 grid w-full gap-3 sm:grid-cols-3">
+        <PrimaryButton
           type="button"
-          className="sm:min-w-40"
-          onClick={() => navigate(`/visit-history/${state.visitId}`)}
-        >
-          <Eye className="size-4" />
-          View Visit
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="sm:min-w-40"
+          className="rounded-full"
           onClick={() => navigate('/new-visit')}
         >
           <Plus className="size-4" />
-          Start New Visit
-        </Button>
-        <Button type="button" variant="outline" className="sm:min-w-40" asChild>
+          New Visit
+        </PrimaryButton>
+        <SecondaryButton
+          type="button"
+          className="rounded-full"
+          onClick={() => navigate('/visit-history')}
+        >
+          <ClipboardList className="size-4" />
+          Visit History
+        </SecondaryButton>
+        <SecondaryButton type="button" className="rounded-full" asChild>
           <Link to="/dashboard">
             <LayoutDashboard className="size-4" />
-            Back to Dashboard
+            Dashboard
           </Link>
-        </Button>
+        </SecondaryButton>
       </div>
     </div>
   )

@@ -1,7 +1,9 @@
-import { Loader2, Plus, Store } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Loader2, MapPinPlus, Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import { AlertBanner, PageHeader } from '@/components/common'
+import { PrimaryButton } from '@/components/ui/action-buttons'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -9,9 +11,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import {
   BranchBrandPerformanceCard,
+  BranchDetailsPanel,
   BranchSelector,
   NewVisitActionBar,
   NewVisitCollapsibleSection,
+  NewVisitHeader,
+  NewVisitProgress,
+  NewVisitSummaryPanel,
   NewVisitValidationSummary,
   VisitPhotosUploader,
   VisitProductCard,
@@ -21,7 +27,14 @@ import {
   useSubmitVisit,
   useVisitStatuses,
 } from '@/features/visits'
-import { useFollowUpDraftVisit } from '@/features/visits/hooks/use-follow-up-draft'
+import { useSaveVisitDraft } from '@/features/visits/hooks/use-save-visit-draft'
+import { useUnsavedChangesWarning } from '@/features/visits/hooks/use-unsaved-changes-warning'
+import { useVisitDraftAutosave } from '@/features/visits/hooks/use-visit-draft-autosave'
+import { useVisitDraftResume } from '@/features/visits/hooks/use-visit-draft-resume'
+import {
+  getVisitCompletionPercent,
+  getVisitProgressSteps,
+} from '@/features/visits/utils/visit-progress'
 import { useAuth } from '@/hooks'
 import {
   canAddProduct,
@@ -55,12 +68,6 @@ function createProductDraft(): VisitProductDraft {
   }
 }
 
-function formatVisitDate(date: Date): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'full',
-  }).format(date)
-}
-
 function ProductCardsSkeleton() {
   return (
     <div className="space-y-4">
@@ -80,24 +87,28 @@ function ProductCardsSkeleton() {
 
 export function NewVisitPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const draftId = searchParams.get('draftId')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const draftIdFromUrl = searchParams.get('draftId')
   const { profile, isLoading: isAuthLoading } = useAuth()
   const { toast } = useToast()
   const submitVisitMutation = useSubmitVisit()
+  const saveDraftMutation = useSaveVisitDraft()
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches()
   const { data: visitStatuses = createFallbackVisitStatusOptions() } =
     useVisitStatuses()
 
-  const [branchId, setBranchId] = useState('')
   const {
-    data: followUpDraft,
-    isLoading: isFollowUpDraftLoading,
-    isError: isFollowUpDraftError,
-    error: followUpDraftError,
-  } = useFollowUpDraftVisit(draftId)
-  const activeBranchId = followUpDraft?.storeId ?? branchId
-  const followUpDraftVisitId = followUpDraft?.visitId ?? null
+    data: resumedDraft,
+    isLoading: isDraftResumeLoading,
+    isError: isDraftResumeError,
+    error: draftResumeError,
+  } = useVisitDraftResume(draftIdFromUrl, Boolean(draftIdFromUrl))
+
+  const [branchId, setBranchId] = useState('')
+  const [savedDraftVisitId, setSavedDraftVisitId] = useState<string | null>(
+    draftIdFromUrl,
+  )
+  const [visitNumberLabel, setVisitNumberLabel] = useState('Draft · Pending')
   const [products, setProducts] = useState<VisitProductDraft[]>([])
   const [expandedProductId, setExpandedProductId] = useState<string | null>(
     null,
@@ -109,6 +120,14 @@ export function NewVisitPage() {
   const [expandedSections, setExpandedSections] = useState(
     DEFAULT_EXPANDED_SECTIONS,
   )
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
+  const [isDraftHydrated, setIsDraftHydrated] = useState(!draftIdFromUrl)
+  const hasHydratedDraft = useRef(false)
+
+  const activeBranchId = resumedDraft?.storeId ?? branchId
+  const draftVisitId = savedDraftVisitId ?? resumedDraft?.visitId ?? null
+  const isFollowUpDraft = Boolean(resumedDraft?.isFollowUp)
 
   const {
     data: branchProducts = [],
@@ -122,10 +141,19 @@ export function NewVisitPage() {
     isFetching: isBrandPerformanceFetching,
   } = useBranchBrandPerformance(activeBranchId || null)
 
-  const selectedBranch =
-    branches.find((branch) => branch.id === activeBranchId) ?? null
+  const selectedBranch = useMemo(
+    () =>
+      branches.find((branch) => branch.id === activeBranchId) ??
+      (resumedDraft
+        ? {
+            id: resumedDraft.storeId,
+            name: resumedDraft.storeName,
+            budget_channel: null,
+          }
+        : null),
+    [activeBranchId, branches, resumedDraft],
+  )
 
-  const visitDateLabel = useMemo(() => formatVisitDate(new Date()), [])
   const userLabel =
     profile?.full_name?.trim() || profile?.username || 'Unknown user'
 
@@ -137,6 +165,17 @@ export function NewVisitPage() {
     branchId: activeBranchId || null,
     products,
   })
+
+  const visitStatus = validation.isValid ? 'Ready' : 'Draft'
+
+  const progressSteps = getVisitProgressSteps({
+    branchSelected: Boolean(activeBranchId),
+    products,
+    photosCount: visitPhotos.length,
+    isReady: validation.isValid,
+  })
+
+  const completionPercent = getVisitCompletionPercent(progressSteps)
 
   const isProductsLoading =
     Boolean(activeBranchId) &&
@@ -151,21 +190,41 @@ export function NewVisitPage() {
     [branchProducts],
   )
 
+  const firstVisitPhotoUrl = visitPhotos[0]?.previewUrl ?? null
+
   useEffect(() => {
-    if (!isFollowUpDraftError) {
+    if (!resumedDraft || hasHydratedDraft.current) {
+      return
+    }
+
+    hasHydratedDraft.current = true
+    setIsDraftHydrated(true)
+    setBranchId(resumedDraft.storeId)
+    setSavedDraftVisitId(resumedDraft.visitId)
+    setProducts(resumedDraft.products)
+    setGeneralNotes(resumedDraft.generalNotes)
+    setVisitNumberLabel(
+      resumedDraft.visitNumber ??
+        `Draft · ${resumedDraft.visitId.slice(0, 8).toUpperCase()}`,
+    )
+    setIsDirty(false)
+  }, [resumedDraft])
+
+  useEffect(() => {
+    if (!isDraftResumeError) {
       return
     }
 
     toast({
       variant: 'error',
-      title: 'Unable to load follow-up visit',
+      title: 'Unable to load draft visit',
       description:
-        followUpDraftError instanceof Error
-          ? followUpDraftError.message
-          : 'The follow-up draft could not be loaded.',
+        draftResumeError instanceof Error
+          ? draftResumeError.message
+          : 'The draft visit could not be loaded.',
     })
     navigate('/visit-history', { replace: true })
-  }, [followUpDraftError, isFollowUpDraftError, navigate, toast])
+  }, [draftResumeError, isDraftResumeError, navigate, toast])
 
   useEffect(() => {
     return () => {
@@ -176,6 +235,66 @@ export function NewVisitPage() {
       }
     }
   }, [visitPhotos])
+
+  const markDirty = useCallback(() => {
+    setIsDirty(true)
+  }, [])
+
+  const saveDraft = useCallback(async () => {
+    if (!selectedBranch || submitVisitMutation.isPending) {
+      return
+    }
+
+    const result = await saveDraftMutation.mutateAsync({
+      visitId: draftVisitId,
+      storeId: selectedBranch.id,
+      storeName: selectedBranch.name,
+      generalNotes,
+      products,
+    })
+
+    if (!result.success) {
+      toast({
+        variant: 'error',
+        title: 'Draft save failed',
+        description: result.message,
+      })
+      return
+    }
+
+    setSavedDraftVisitId(result.visitId)
+    setLastSavedAt(new Date())
+    setIsDirty(false)
+
+    if (draftIdFromUrl !== result.visitId) {
+      setSearchParams({ draftId: result.visitId }, { replace: true })
+    }
+
+    if (visitNumberLabel === 'Draft · Pending') {
+      setVisitNumberLabel(`Draft · ${result.visitId.slice(0, 8).toUpperCase()}`)
+    }
+  }, [
+    draftIdFromUrl,
+    draftVisitId,
+    generalNotes,
+    products,
+    saveDraftMutation,
+    selectedBranch,
+    setSearchParams,
+    submitVisitMutation.isPending,
+    toast,
+    visitNumberLabel,
+  ])
+
+  useVisitDraftAutosave({
+    enabled:
+      Boolean(activeBranchId) && isDirty && !submitVisitMutation.isPending,
+    onSave: saveDraft,
+  })
+
+  useUnsavedChangesWarning(
+    isDirty && !submitVisitMutation.isPending && !saveDraftMutation.isPending,
+  )
 
   function toggleSection(sectionId: Exclude<NewVisitSectionId, 'submit'>) {
     setExpandedSections((current) => ({
@@ -192,6 +311,7 @@ export function NewVisitPage() {
     setGeneralNotes('')
     setActionMessage(null)
     setShowValidationSummary(false)
+    markDirty()
   }
 
   function handleAddProduct() {
@@ -232,6 +352,7 @@ export function NewVisitPage() {
     const newProduct = createProductDraft()
     setProducts((current) => [...current, newProduct])
     setExpandedProductId(newProduct.clientId)
+    markDirty()
   }
 
   function updateProduct(clientId: string, nextProduct: VisitProductDraft) {
@@ -240,18 +361,32 @@ export function NewVisitPage() {
         product.clientId === clientId ? nextProduct : product,
       ),
     )
+    markDirty()
   }
 
   function removeProduct(clientId: string) {
     setProducts((current) =>
       current.filter((item) => item.clientId !== clientId),
     )
-
     setExpandedProductId((current) => (current === clientId ? null : current))
+    markDirty()
   }
 
   function toggleProductExpanded(clientId: string) {
     setExpandedProductId((current) => (current === clientId ? null : clientId))
+  }
+
+  function handleCancel() {
+    if (
+      isDirty &&
+      !window.confirm(
+        'You have unsaved changes. Leave this visit and discard your progress?',
+      )
+    ) {
+      return
+    }
+
+    navigate('/dashboard')
   }
 
   async function handleSubmitVisit() {
@@ -283,7 +418,7 @@ export function NewVisitPage() {
       products,
       photos: visitPhotos,
       statusOptions: visitStatuses,
-      draftVisitId: followUpDraftVisitId ?? undefined,
+      draftVisitId: draftVisitId ?? undefined,
     })
 
     if (!result.success) {
@@ -298,6 +433,8 @@ export function NewVisitPage() {
       return
     }
 
+    setIsDirty(false)
+
     navigate('/new-visit/success', {
       replace: true,
       state: {
@@ -310,7 +447,10 @@ export function NewVisitPage() {
     })
   }
 
-  if (isAuthLoading || (draftId && isFollowUpDraftLoading)) {
+  if (
+    isAuthLoading ||
+    (draftIdFromUrl && isDraftResumeLoading && !isDraftHydrated)
+  ) {
     return (
       <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
@@ -320,21 +460,38 @@ export function NewVisitPage() {
   }
 
   return (
-    <div className="w-full min-w-0 pb-28">
+    <div className="w-full min-w-0 pb-32">
       <div className="space-y-6">
-        <div className="flex items-start gap-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-            <Store className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">New Visit</h2>
-            <p className="text-sm text-muted-foreground">
-              {followUpDraftVisitId
-                ? 'Complete the follow-up visit for the linked parent visit.'
-                : 'Create a branch visit, add products, and capture notes and photos.'}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="New Visit"
+          icon={MapPinPlus}
+          description={
+            isFollowUpDraft
+              ? 'Complete the follow-up visit for the linked parent visit.'
+              : 'Create a branch visit, review products, and capture notes and photos.'
+          }
+          actions={
+            <PrimaryButton
+              type="button"
+              className="rounded-full"
+              onClick={handleAddProduct}
+            >
+              <Plus className="size-4" />
+              Add Product
+            </PrimaryButton>
+          }
+        />
+
+        <NewVisitHeader
+          visitNumberLabel={visitNumberLabel}
+          userLabel={userLabel}
+          visitStatus={visitStatus}
+        />
+
+        <NewVisitProgress
+          steps={progressSteps}
+          completionPercent={completionPercent}
+        />
 
         {showValidationSummary &&
         (actionMessage || validation.issues.length > 0) ? (
@@ -344,175 +501,183 @@ export function NewVisitPage() {
           />
         ) : null}
 
-        <NewVisitCollapsibleSection
-          sectionId="info"
-          title="Visit Information"
-          description="Details for this store visit session."
-          expanded={expandedSections.info}
-          onToggle={() => toggleSection('info')}
-        >
-          <dl className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1">
-              <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Visit Date
-              </dt>
-              <dd className="text-sm font-medium">{visitDateLabel}</dd>
-            </div>
-            <div className="space-y-1">
-              <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Logged In User
-              </dt>
-              <dd className="text-sm font-medium">{userLabel}</dd>
-            </div>
-            <div className="space-y-1">
-              <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Selected Branch
-              </dt>
-              <dd className="text-sm font-medium">
-                {selectedBranch?.name ?? 'Not selected'}
-              </dd>
-            </div>
-          </dl>
-        </NewVisitCollapsibleSection>
-
-        <NewVisitCollapsibleSection
-          sectionId="branch"
-          title="Branch"
-          description="Choose the branch you are visiting. Products load from the current snapshot for that branch."
-          expanded={expandedSections.branch}
-          onToggle={() => toggleSection('branch')}
-        >
-          <BranchSelector
-            branches={branches}
-            value={activeBranchId}
-            onChange={handleBranchChange}
-            isLoading={isBranchesLoading}
-            disabled={Boolean(followUpDraftVisitId)}
-          />
-        </NewVisitCollapsibleSection>
-
-        <NewVisitCollapsibleSection
-          sectionId="performance"
-          title="Branch Performance"
-          description="Month-to-date sales target and achievement by brand for the selected branch."
-          expanded={expandedSections.performance}
-          onToggle={() => toggleSection('performance')}
-        >
-          {!activeBranchId ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Select a branch to view performance data.
-            </p>
-          ) : (
-            <BranchBrandPerformanceCard
-              rows={brandPerformance}
-              isLoading={isBrandPerformanceLoadingState}
-              embedded
-            />
-          )}
-        </NewVisitCollapsibleSection>
-
-        <NewVisitCollapsibleSection
-          sectionId="inspection"
-          title="Inspection Items"
-          description="Add one or more products observed during this visit."
-          expanded={expandedSections.inspection}
-          onToggle={() => toggleSection('inspection')}
-        >
-          <div className="space-y-4">
-            {!activeBranchId ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                Select a branch before adding inspection items.
-              </p>
-            ) : null}
-
-            {activeBranchId && isProductsLoading ? (
-              <ProductCardsSkeleton />
-            ) : null}
-
-            {activeBranchId &&
-            !isProductsLoading &&
-            branchProducts.length === 0 ? (
-              <div
-                className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
-                role="status"
-              >
-                No products available for this branch.
-              </div>
-            ) : null}
-
-            {activeBranchId &&
-            !isProductsLoading &&
-            branchProducts.length > 0 &&
-            products.length === 0 ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                No inspection items yet. Add at least one product to continue.
-              </p>
-            ) : null}
-
-            {products.map((product, index) => (
-              <VisitProductCard
-                key={product.clientId}
-                index={index}
-                product={product}
-                branchBrands={branchBrands}
-                branchProducts={branchProducts}
-                hasBranch={Boolean(activeBranchId)}
-                statusOptions={visitStatuses}
-                selectedProductIds={selectedProductIds}
-                isExpanded={expandedProductId === product.clientId}
-                onToggleExpand={() => toggleProductExpanded(product.clientId)}
-                onChange={(nextProduct) =>
-                  updateProduct(product.clientId, nextProduct)
-                }
-                onRemove={() => removeProduct(product.clientId)}
-              />
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="h-auto min-h-16 w-full border-dashed py-6 text-base"
-              onClick={handleAddProduct}
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
+            <NewVisitCollapsibleSection
+              sectionId="branch"
+              title="Branch"
+              description="Search and select the store you are visiting."
+              expanded={expandedSections.branch}
+              onToggle={() => toggleSection('branch')}
             >
-              <Plus className="size-5" />
-              Add Product
-            </Button>
-          </div>
-        </NewVisitCollapsibleSection>
+              <div className="space-y-5">
+                <BranchSelector
+                  branches={branches}
+                  value={activeBranchId}
+                  onChange={handleBranchChange}
+                  isLoading={isBranchesLoading}
+                  disabled={isFollowUpDraft}
+                />
+                <BranchDetailsPanel
+                  branch={selectedBranch}
+                  brandCount={branchBrands.length}
+                  productsCount={branchProducts.length}
+                  isLoadingProducts={isProductsLoading}
+                />
+              </div>
+            </NewVisitCollapsibleSection>
 
-        <NewVisitCollapsibleSection
-          sectionId="photos"
-          title="Visit Photos"
-          description="Upload photos for this visit. Images are attached to the visit, not individual products."
-          expanded={expandedSections.photos}
-          onToggle={() => toggleSection('photos')}
-        >
-          <VisitPhotosUploader photos={visitPhotos} onChange={setVisitPhotos} />
-        </NewVisitCollapsibleSection>
+            <NewVisitCollapsibleSection
+              sectionId="performance"
+              title="Branch Performance"
+              description="Month-to-date sales target and achievement by brand."
+              expanded={expandedSections.performance}
+              onToggle={() => toggleSection('performance')}
+            >
+              {!activeBranchId ? (
+                <p className="text-sm text-muted-foreground" role="status">
+                  Select a branch to view performance data.
+                </p>
+              ) : (
+                <BranchBrandPerformanceCard
+                  rows={brandPerformance}
+                  isLoading={isBrandPerformanceLoadingState}
+                  embedded
+                />
+              )}
+            </NewVisitCollapsibleSection>
 
-        <NewVisitCollapsibleSection
-          sectionId="notes"
-          title="General Notes"
-          description="Add visit-level notes that apply to the entire branch visit."
-          expanded={expandedSections.notes}
-          onToggle={() => toggleSection('notes')}
-        >
-          <div className="space-y-2">
-            <Label htmlFor="general-notes">Notes</Label>
-            <Textarea
-              id="general-notes"
-              value={generalNotes}
-              placeholder="Enter general visit notes..."
-              onChange={(event) => setGeneralNotes(event.target.value)}
-            />
+            <NewVisitCollapsibleSection
+              sectionId="inspection"
+              title="Products"
+              description="Review products observed during this visit."
+              expanded={expandedSections.inspection}
+              onToggle={() => toggleSection('inspection')}
+            >
+              <div className="space-y-4">
+                {!activeBranchId ? (
+                  <AlertBanner title="Branch required">
+                    Select a branch before adding inspection products.
+                  </AlertBanner>
+                ) : null}
+
+                {activeBranchId && isProductsLoading ? (
+                  <ProductCardsSkeleton />
+                ) : null}
+
+                {activeBranchId &&
+                !isProductsLoading &&
+                branchProducts.length === 0 ? (
+                  <div
+                    className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+                    role="status"
+                  >
+                    No products available for this branch.
+                  </div>
+                ) : null}
+
+                {activeBranchId &&
+                !isProductsLoading &&
+                branchProducts.length > 0 &&
+                products.length === 0 ? (
+                  <p className="text-sm text-muted-foreground" role="status">
+                    No inspection items yet. Add at least one product to
+                    continue.
+                  </p>
+                ) : null}
+
+                {products.map((product, index) => (
+                  <VisitProductCard
+                    key={product.clientId}
+                    index={index}
+                    product={product}
+                    branchBrands={branchBrands}
+                    branchProducts={branchProducts}
+                    hasBranch={Boolean(activeBranchId)}
+                    statusOptions={visitStatuses}
+                    selectedProductIds={selectedProductIds}
+                    isExpanded={expandedProductId === product.clientId}
+                    visitPhotosCount={visitPhotos.length}
+                    firstVisitPhotoUrl={firstVisitPhotoUrl}
+                    onToggleExpand={() =>
+                      toggleProductExpanded(product.clientId)
+                    }
+                    onChange={(nextProduct) =>
+                      updateProduct(product.clientId, nextProduct)
+                    }
+                    onRemove={() => removeProduct(product.clientId)}
+                  />
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="h-auto min-h-16 w-full rounded-2xl border-dashed py-6 text-base"
+                  onClick={handleAddProduct}
+                >
+                  <Plus className="size-5" />
+                  Add Product
+                </Button>
+              </div>
+            </NewVisitCollapsibleSection>
+
+            <NewVisitCollapsibleSection
+              sectionId="photos"
+              title="Visit Photos"
+              description="Upload, preview, reorder, and compress visit photos."
+              expanded={expandedSections.photos}
+              onToggle={() => toggleSection('photos')}
+            >
+              <VisitPhotosUploader
+                photos={visitPhotos}
+                onChange={(nextPhotos) => {
+                  setVisitPhotos(nextPhotos)
+                  markDirty()
+                }}
+              />
+            </NewVisitCollapsibleSection>
+
+            <NewVisitCollapsibleSection
+              sectionId="notes"
+              title="General Notes"
+              description="Add visit-level notes that apply to the entire branch visit."
+              expanded={expandedSections.notes}
+              onToggle={() => toggleSection('notes')}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="general-notes">Notes</Label>
+                <Textarea
+                  id="general-notes"
+                  value={generalNotes}
+                  placeholder="Enter general visit notes..."
+                  onChange={(event) => {
+                    setGeneralNotes(event.target.value)
+                    markDirty()
+                  }}
+                />
+              </div>
+            </NewVisitCollapsibleSection>
           </div>
-        </NewVisitCollapsibleSection>
+
+          <NewVisitSummaryPanel
+            branchName={selectedBranch?.name ?? null}
+            productsCount={products.length}
+            photosCount={visitPhotos.length}
+            completionPercent={completionPercent}
+            className="xl:block"
+          />
+        </div>
       </div>
 
       <NewVisitActionBar
+        onSaveDraft={() => void saveDraft()}
         onSubmit={() => void handleSubmitVisit()}
+        onCancel={handleCancel}
         isSubmitting={submitVisitMutation.isPending}
+        isSavingDraft={saveDraftMutation.isPending}
+        canSaveDraft={Boolean(selectedBranch)}
+        lastSavedAt={lastSavedAt}
       />
     </div>
   )

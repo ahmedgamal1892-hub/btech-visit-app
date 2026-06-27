@@ -1,6 +1,7 @@
-import { ChevronDown, Trash2 } from 'lucide-react'
+import { Camera, ChevronDown, ImageIcon, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -30,6 +31,8 @@ type VisitProductCardProps = {
   statusOptions: VisitStatusOption[]
   selectedProductIds: string[]
   isExpanded: boolean
+  visitPhotosCount: number
+  firstVisitPhotoUrl?: string | null
   onToggleExpand: () => void
   onChange: (product: VisitProductDraft) => void
   onRemove: () => void
@@ -44,6 +47,8 @@ export function VisitProductCard({
   statusOptions,
   selectedProductIds,
   isExpanded,
+  visitPhotosCount,
+  firstVisitPhotoUrl,
   onToggleExpand,
   onChange,
   onRemove,
@@ -84,44 +89,76 @@ export function VisitProductCard({
   const hasStatus = isVisitProductStatus(product.status)
 
   return (
-    <Card className="rounded-2xl border-border/70 shadow-sm">
+    <Card className="overflow-hidden rounded-2xl border-border/70 shadow-sm transition-all duration-200 hover:border-primary/20 hover:shadow-md">
       <CardHeader className="p-0">
         <button
           type="button"
-          className="flex w-full items-start gap-3 rounded-2xl px-4 py-4 text-left transition-colors hover:bg-muted/30 sm:items-center"
+          className="flex w-full items-start gap-4 rounded-2xl px-4 py-4 text-left transition-colors hover:bg-muted/30 sm:items-center"
           onClick={onToggleExpand}
           aria-expanded={isExpanded}
           aria-controls={`product-panel-${product.clientId}`}
         >
-          <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/30">
+            {firstVisitPhotoUrl ? (
+              <img
+                src={firstVisitPhotoUrl}
+                alt=""
+                className="size-full object-cover"
+              />
+            ) : (
+              <ImageIcon className="size-6 text-muted-foreground" />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-sm font-semibold sm:text-base">
-                Product #{index + 1}
+                {selectedProduct?.product_name || `Product #${index + 1}`}
               </span>
               {isIncomplete ? (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                <Badge variant="secondary" className="rounded-full">
                   Incomplete
-                </span>
-              ) : null}
+                </Badge>
+              ) : (
+                <Badge variant="success" className="rounded-full">
+                  Reviewed
+                </Badge>
+              )}
             </div>
 
-            <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
-              {product.brand ? (
-                <span className="truncate font-medium text-foreground">
-                  {product.brand}
-                </span>
-              ) : null}
-              {selectedProduct ? (
-                <span className="truncate">{selectedProduct.product_name}</span>
-              ) : null}
-              {hasStatus ? (
-                <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-                  <span aria-hidden="true">
-                    {visitStatusIcon(product.status as VisitProductStatus)}
+            <div className="grid gap-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Item Code:</span>{' '}
+                {selectedProduct?.item_code || '—'}
+              </p>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Status:</span>{' '}
+                {hasStatus ? (
+                  <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                    <span aria-hidden="true">
+                      {visitStatusIcon(product.status as VisitProductStatus)}
+                    </span>
+                    {product.status}
                   </span>
-                  {product.status}
-                </span>
-              ) : null}
+                ) : (
+                  '—'
+                )}
+              </p>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Condition:</span>{' '}
+                {selectedProduct?.sub_category?.trim() || product.status || '—'}
+              </p>
+              <p className="text-muted-foreground sm:col-span-2 xl:col-span-3">
+                <span className="font-medium text-foreground">Notes:</span>{' '}
+                {product.notes.trim() || '—'}
+              </p>
+              <p className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <Camera className="size-3.5" />
+                <span className="font-medium text-foreground">
+                  Photo Count:
+                </span>{' '}
+                {visitPhotosCount}
+              </p>
             </div>
           </div>
 
@@ -225,6 +262,7 @@ export function VisitProductCard({
               type="button"
               variant="outline"
               size="sm"
+              className="rounded-full"
               onClick={onRemove}
             >
               <Trash2 className="size-4" />
