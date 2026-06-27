@@ -5,7 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
+import { useToast } from '@/components/ui/toast'
 import {
+  DeleteVisitDialog,
+  type DeleteVisitTarget,
   VisitHistoryFilters,
   VisitHistoryTable,
   VisitHistoryTableSkeleton,
@@ -14,15 +17,23 @@ import {
   useVisitHistoryVisitors,
   useVisitsHistory,
 } from '@/features/history'
+import { useDeleteVisit } from '@/features/history/hooks/use-delete-visit'
 import { useBranches } from '@/features/visits'
 import { useAuth, useDebouncedValue } from '@/hooks'
 import type {
   VisitHistoryFilters as VisitHistoryFiltersState,
+  VisitHistoryRow,
   VisitHistorySortBy,
 } from '@/types/visit-history'
 
 export function VisitHistoryPage() {
-  const { isLoading: isAuthLoading, isAdmin } = useAuth()
+  const { toast } = useToast()
+  const { isLoading: isAuthLoading, isAdmin, user } = useAuth()
+  const deleteVisitMutation = useDeleteVisit()
+  const [deleteTarget, setDeleteTarget] = useState<DeleteVisitTarget | null>(
+    null,
+  )
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [filters, setFilters] = useState<
     Omit<VisitHistoryFiltersState, 'search'>
   >(() => {
@@ -83,6 +94,48 @@ export function VisitHistoryPage() {
         page: 1,
       }
     })
+  }
+
+  const canDeleteVisit = useMemo(
+    () => (row: VisitHistoryRow) =>
+      isAdmin || (user?.id !== undefined && row.visitorId === user.id),
+    [isAdmin, user],
+  )
+
+  function handleDeleteRequest(row: VisitHistoryRow) {
+    setDeleteTarget({
+      visitId: row.visitId,
+      visitNumber: row.visitNumber,
+      branchName: row.branchName,
+    })
+    setIsDeleteDialogOpen(true)
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) {
+      return
+    }
+
+    try {
+      await deleteVisitMutation.mutateAsync(deleteTarget.visitId)
+
+      toast({
+        variant: 'success',
+        title: 'Visit deleted',
+        description: 'The visit and related records were removed.',
+      })
+      setIsDeleteDialogOpen(false)
+      setDeleteTarget(null)
+    } catch (deleteError) {
+      toast({
+        variant: 'error',
+        title: 'Delete failed',
+        description:
+          deleteError instanceof Error
+            ? deleteError.message
+            : 'Unable to delete the visit.',
+      })
+    }
   }
 
   if (isAuthLoading) {
@@ -161,6 +214,8 @@ export function VisitHistoryPage() {
                 sortBy={filters.sortBy}
                 sortDir={filters.sortDir}
                 onSort={handleSort}
+                canDeleteVisit={canDeleteVisit}
+                onDelete={handleDeleteRequest}
               />
 
               <div className="flex flex-col gap-4 border-t border-border/70 pt-4 lg:flex-row lg:items-center lg:justify-between">
@@ -234,6 +289,19 @@ export function VisitHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <DeleteVisitDialog
+        visit={deleteTarget}
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open)
+          if (!open) {
+            setDeleteTarget(null)
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        isSubmitting={deleteVisitMutation.isPending}
+      />
     </div>
   )
 }

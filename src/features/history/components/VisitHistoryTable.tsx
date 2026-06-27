@@ -1,4 +1,4 @@
-import { ArrowUpDown, Eye } from 'lucide-react'
+import { ArrowUpDown, Eye, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,8 @@ type VisitHistoryTableProps = {
   sortBy: VisitHistorySortBy
   sortDir: VisitHistorySortDir
   onSort: (sortBy: VisitHistorySortBy) => void
+  canDeleteVisit: (row: VisitHistoryRow) => boolean
+  onDelete: (row: VisitHistoryRow) => void
 }
 
 function formatVisitDate(value: string): string {
@@ -74,9 +76,13 @@ function SortableHeader({
 function VisitHistoryCard({
   row,
   onView,
+  canDelete,
+  onDelete,
 }: {
   row: VisitHistoryRow
   onView: (row: VisitHistoryRow) => void
+  canDelete: boolean
+  onDelete: (row: VisitHistoryRow) => void
 }) {
   return (
     <div className="rounded-2xl border border-border/70 p-4">
@@ -109,7 +115,7 @@ function VisitHistoryCard({
         </div>
       </dl>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button
           type="button"
           variant="outline"
@@ -119,6 +125,18 @@ function VisitHistoryCard({
           <Eye className="size-4" />
           View
         </Button>
+        {canDelete ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(row)}
+          >
+            <Trash2 className="size-4" />
+            Delete
+          </Button>
+        ) : null}
       </div>
     </div>
   )
@@ -178,6 +196,8 @@ export function VisitHistoryTable({
   sortBy,
   sortDir,
   onSort,
+  canDeleteVisit,
+  onDelete,
 }: VisitHistoryTableProps) {
   const navigate = useNavigate()
 
@@ -202,7 +222,13 @@ export function VisitHistoryTable({
     <>
       <div className="grid gap-4 md:hidden">
         {rows.map((row) => (
-          <VisitHistoryCard key={row.visitId} row={row} onView={handleView} />
+          <VisitHistoryCard
+            key={row.visitId}
+            row={row}
+            onView={handleView}
+            canDelete={canDeleteVisit(row)}
+            onDelete={onDelete}
+          />
         ))}
       </div>
 
@@ -262,15 +288,29 @@ export function VisitHistoryTable({
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleView(row)}
-                  >
-                    <Eye className="size-4" />
-                    View
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleView(row)}
+                    >
+                      <Eye className="size-4" />
+                      View
+                    </Button>
+                    {canDeleteVisit(row) ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => onDelete(row)}
+                      >
+                        <Trash2 className="size-4" />
+                        Delete
+                      </Button>
+                    ) : null}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

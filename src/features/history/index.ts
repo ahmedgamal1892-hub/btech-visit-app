@@ -1,8 +1,10 @@
 export {
+  DeleteVisitDialog,
   VisitHistoryFilters,
   VisitHistoryTable,
   VisitHistoryTableSkeleton,
 } from './components'
+export type { DeleteVisitTarget } from './components'
 export {
   DEFAULT_VISITS_HISTORY_PAGE_SIZE,
   VISITS_HISTORY_PAGE_SIZE_OPTIONS,

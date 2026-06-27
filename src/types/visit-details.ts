@@ -42,6 +42,7 @@ export type VisitDetails = {
   isReadOnly: boolean
   canReview: boolean
   canCreateFollowUp: boolean
+  canDelete: boolean
   parentVisitId: string | null
   generalNotes: string | null
   pdfReportReference: string

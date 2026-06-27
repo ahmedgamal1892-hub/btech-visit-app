@@ -13,3 +13,4 @@ export {
   fetchVisitHistoryVisitors,
 } from './visits-history.service'
 export { fetchVisitDetails, fetchVisitSummary } from './visit-details.service'
+export { deleteVisit } from './visit-delete.service'

@@ -69,6 +69,7 @@ type VisitDetailsRpcResponse = {
   is_read_only: boolean
   can_review: boolean
   can_create_follow_up: boolean
+  can_delete: boolean
   parent_visit_id: string | null
   general_notes: string | null
   pdf_report_reference: string
@@ -176,6 +177,7 @@ export async function fetchVisitDetails(
     isReadOnly: payload.is_read_only,
     canReview: payload.can_review,
     canCreateFollowUp: payload.can_create_follow_up,
+    canDelete: payload.can_delete,
     parentVisitId: payload.parent_visit_id,
     generalNotes: payload.general_notes,
     pdfReportReference: payload.pdf_report_reference,

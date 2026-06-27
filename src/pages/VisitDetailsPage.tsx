@@ -1,10 +1,13 @@
-import { ArrowLeft, Download, Loader2 } from 'lucide-react'
+import { ArrowLeft, Download, Loader2, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
 import {
   BranchPerformanceCard,
+  DeleteVisitDialog,
+  type DeleteVisitTarget,
   InspectionItemsCard,
   RelatedVisitsCard,
   VisitDetailsHeader,
@@ -17,6 +20,7 @@ import {
   VisitTimelineCard,
 } from '@/features/history/components'
 import { useCreateFollowUpVisit } from '@/features/history/hooks/use-create-follow-up'
+import { useDeleteVisit } from '@/features/history/hooks/use-delete-visit'
 import { useDownloadVisitPdf } from '@/features/history/hooks/use-download-visit-pdf'
 import { useReviewVisit } from '@/features/history/hooks/use-review-visit'
 import { useVisitDetails } from '@/features/history/hooks/use-visit-details'
@@ -33,6 +37,11 @@ export function VisitDetailsPage() {
   const reviewVisitMutation = useReviewVisit()
   const createFollowUpMutation = useCreateFollowUpVisit()
   const downloadVisitPdfMutation = useDownloadVisitPdf()
+  const deleteVisitMutation = useDeleteVisit()
+  const [deleteTarget, setDeleteTarget] = useState<DeleteVisitTarget | null>(
+    null,
+  )
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   async function handleDownloadPdf() {
     if (!visitId || !data) {
@@ -117,6 +126,47 @@ export function VisitDetailsPage() {
     }
   }
 
+  function handleDeleteRequest() {
+    if (!data) {
+      return
+    }
+
+    setDeleteTarget({
+      visitId: data.visitId,
+      visitNumber: data.visitNumber,
+      branchName: data.branchName,
+    })
+    setIsDeleteDialogOpen(true)
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) {
+      return
+    }
+
+    try {
+      await deleteVisitMutation.mutateAsync(deleteTarget.visitId)
+
+      toast({
+        variant: 'success',
+        title: 'Visit deleted',
+        description: 'The visit and related records were removed.',
+      })
+      setIsDeleteDialogOpen(false)
+      setDeleteTarget(null)
+      navigate('/visit-history')
+    } catch (deleteError) {
+      toast({
+        variant: 'error',
+        title: 'Delete failed',
+        description:
+          deleteError instanceof Error
+            ? deleteError.message
+            : 'Unable to delete the visit.',
+      })
+    }
+  }
+
   if (isLoading) {
     return <VisitDetailsSkeleton />
   }
@@ -172,6 +222,27 @@ export function VisitDetailsPage() {
               </>
             )}
           </Button>
+          {data.canDelete ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              disabled={deleteVisitMutation.isPending}
+              onClick={handleDeleteRequest}
+            >
+              {deleteVisitMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-4" />
+                  Delete Visit
+                </>
+              )}
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -209,6 +280,19 @@ export function VisitDetailsPage() {
       <VisitPhotoGallery photos={data.photos} />
 
       <VisitNotesCard notes={data.generalNotes} />
+
+      <DeleteVisitDialog
+        visit={deleteTarget}
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open)
+          if (!open) {
+            setDeleteTarget(null)
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        isSubmitting={deleteVisitMutation.isPending}
+      />
     </div>
   )
 }

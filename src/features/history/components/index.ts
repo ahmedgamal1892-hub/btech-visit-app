@@ -1,3 +1,5 @@
+export { DeleteVisitDialog } from './DeleteVisitDialog'
+export type { DeleteVisitTarget } from './DeleteVisitDialog'
 export { BranchPerformanceCard } from './BranchPerformanceCard'
 export { InspectionItemsCard } from './InspectionItemsCard'
 export { RelatedVisitsCard } from './RelatedVisitsCard'
