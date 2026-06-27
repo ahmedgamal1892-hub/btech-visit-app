@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Building2, CalendarDays, MapPin, Package, Tags } from 'lucide-react'
+import { CalendarDays, MapPin, Package, Tags } from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchLastVisit } from '@/features/visits/hooks/use-branch-last-visit'
@@ -65,11 +65,6 @@ export function BranchDetailsPanel({
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <DetailTile
-          label="Store Code"
-          value={branch.budget_channel?.trim() || '—'}
-          icon={Building2}
-        />
         <DetailTile label="Store Name" value={branch.name} icon={MapPin} />
         <DetailTile
           label="Region"

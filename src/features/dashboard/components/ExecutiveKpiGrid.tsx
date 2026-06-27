@@ -27,7 +27,7 @@ export const ExecutiveKpiGrid = memo(function ExecutiveKpiGrid({
   isLoading = false,
 }: ExecutiveKpiGridProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1440px]:grid-cols-4 min-[1440px]:gap-4">
       <ExecutiveKpiCard
         title="Total Branches"
         subtitle="Branches in the current operational snapshot."

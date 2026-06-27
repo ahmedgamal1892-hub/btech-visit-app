@@ -29,11 +29,11 @@ function PerformanceMetric({
   icon: typeof CalendarDays
 }) {
   return (
-    <article className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+    <article className="min-w-0 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">
+          <p className="mt-2 text-xl font-bold break-words text-foreground tabular-nums sm:text-2xl">
             {value}
           </p>
         </div>
@@ -51,9 +51,9 @@ export const MyPerformanceSection = memo(function MyPerformanceSection({
 }: MyPerformanceSectionProps) {
   if (isLoading) {
     return (
-      <section className="space-y-4">
+      <section className="min-w-0 space-y-3 md:space-y-4">
         <Skeleton className="h-6 w-40" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 min-[1440px]:grid-cols-3 min-[1440px]:gap-4">
           {Array.from({ length: 9 }).map((_, index) => (
             <Skeleton key={index} className="h-28 rounded-2xl" />
           ))}
@@ -72,17 +72,17 @@ export const MyPerformanceSection = memo(function MyPerformanceSection({
       : 'Unranked'
 
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">
+    <section className="min-w-0 space-y-3 md:space-y-4">
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold break-words text-foreground">
           My Performance
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm break-words text-muted-foreground">
           Your personal visit activity and contribution snapshot.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 min-[1440px]:grid-cols-3 min-[1440px]:gap-4">
         <PerformanceMetric
           label="My Visits Today"
           value={performance.visitsToday}
@@ -125,7 +125,7 @@ export const MyPerformanceSection = memo(function MyPerformanceSection({
         />
         <article
           className={cn(
-            'rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-card p-4 shadow-sm',
+            'min-w-0 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-card p-4 shadow-sm',
           )}
         >
           <div className="flex items-start justify-between gap-3">

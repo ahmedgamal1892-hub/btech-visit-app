@@ -16,16 +16,22 @@ export function DashboardLazySection({
   children,
 }: DashboardLazySectionProps) {
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+    <section className="min-w-0 space-y-3 md:space-y-4">
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold break-words text-foreground">
+          {title}
+        </h2>
         {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-sm break-words text-muted-foreground">
+            {description}
+          </p>
         ) : null}
       </div>
       <Suspense
         fallback={
-          <Skeleton className={`w-full rounded-2xl ${fallbackHeightClass}`} />
+          <Skeleton
+            className={`w-full min-w-0 rounded-xl ${fallbackHeightClass}`}
+          />
         }
       >
         {children}

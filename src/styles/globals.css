@@ -129,6 +129,16 @@
   .focus-ring {
     @apply outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
+
+  .dashboard-page {
+    @apply min-w-0 max-w-full overflow-x-hidden;
+  }
+
+  .dashboard-page [data-slot='card'],
+  .dashboard-page .surface-card,
+  .dashboard-page .filter-bar {
+    @apply min-w-0 max-w-full;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

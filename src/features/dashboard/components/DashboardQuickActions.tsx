@@ -78,15 +78,19 @@ export const DashboardQuickActions = memo(function DashboardQuickActions() {
   const actions = QUICK_ACTIONS.filter((action) => !action.adminOnly || isAdmin)
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1440px]:grid-cols-4">
       {actions.map((action) => {
         const Icon = action.icon
 
         return (
-          <Link key={action.title} to={action.href} className="group block">
+          <Link
+            key={action.title}
+            to={action.href}
+            className="group block min-w-0"
+          >
             <article
               className={cn(
-                'relative h-full overflow-hidden rounded-2xl border border-border/80 bg-card p-5 shadow-sm',
+                'relative h-full min-w-0 overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-5',
                 'transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg',
               )}
             >
@@ -96,10 +100,10 @@ export const DashboardQuickActions = memo(function DashboardQuickActions() {
                   <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
                     <Icon className="size-5" aria-hidden="true" />
                   </div>
-                  <h3 className="mt-4 font-semibold text-foreground">
+                  <h3 className="mt-4 font-semibold break-words text-foreground">
                     {action.title}
                   </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-1 text-sm leading-relaxed break-words text-muted-foreground">
                     {action.description}
                   </p>
                 </div>

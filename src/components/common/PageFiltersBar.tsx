@@ -13,6 +13,7 @@ type PageFiltersBarProps = {
   isRefreshing?: boolean
   actions?: ReactNode
   className?: string
+  actionsClassName?: string
 }
 
 export function PageFiltersBar({
@@ -24,6 +25,7 @@ export function PageFiltersBar({
   isRefreshing = false,
   actions,
   className,
+  actionsClassName,
 }: PageFiltersBarProps) {
   return (
     <section
@@ -42,7 +44,12 @@ export function PageFiltersBar({
         </div>
 
         {onReset || onRefresh || actions ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className={cn(
+              'flex flex-wrap items-center gap-2',
+              actionsClassName,
+            )}
+          >
             {onReset ? (
               <Button
                 type="button"

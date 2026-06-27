@@ -98,11 +98,12 @@ export function DashboardPage() {
   const sectionLoading = isFetching && !data
 
   return (
-    <div className="page-stack">
+    <div className="dashboard-page page-stack">
       <PageHeader
         title="Executive Dashboard"
         description="Management overview for regional performance, visit activity, and operational coverage."
         icon={LayoutDashboard}
+        className="min-w-0 [&_h1]:break-words [&_p]:break-words"
       />
 
       <DashboardFiltersBar
@@ -165,13 +166,15 @@ export function DashboardPage() {
       <DashboardLazySection
         title="Analytics"
         description="Visit trends, branch performance, and upload activity."
-        fallbackHeightClass="h-[720px]"
+        fallbackHeightClass="h-[28rem] md:h-[720px]"
       >
         {showInitialSkeleton ? (
-          <Skeleton className="h-[720px] w-full rounded-xl" />
+          <Skeleton className="h-[28rem] w-full min-w-0 rounded-xl md:h-[720px]" />
         ) : (
           <Suspense
-            fallback={<Skeleton className="h-[720px] w-full rounded-xl" />}
+            fallback={
+              <Skeleton className="h-[28rem] w-full min-w-0 rounded-xl md:h-[720px]" />
+            }
           >
             <DashboardChartsSection
               charts={charts}
@@ -187,9 +190,13 @@ export function DashboardPage() {
         fallbackHeightClass="h-96"
       >
         {showInitialSkeleton ? (
-          <Skeleton className="h-96 w-full rounded-xl" />
+          <Skeleton className="h-72 w-full min-w-0 rounded-xl md:h-96" />
         ) : (
-          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+          <Suspense
+            fallback={
+              <Skeleton className="h-72 w-full min-w-0 rounded-xl md:h-96" />
+            }
+          >
             <VisitorLeaderboard
               rows={tables?.leaderboard}
               isLoading={sectionLoading}
@@ -201,7 +208,7 @@ export function DashboardPage() {
       {showInitialSkeleton ? (
         <DashboardTablesSkeleton />
       ) : (
-        <div className="grid gap-5 xl:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-1 gap-4 md:gap-5 min-[1440px]:grid-cols-2 min-[1440px]:gap-5">
           <TopVisitorsTable
             rows={tables?.topVisitors ?? []}
             isLoading={sectionLoading}
@@ -219,9 +226,13 @@ export function DashboardPage() {
         fallbackHeightClass="h-96"
       >
         {showInitialSkeleton ? (
-          <Skeleton className="h-96 w-full rounded-xl" />
+          <Skeleton className="h-72 w-full min-w-0 rounded-xl md:h-96" />
         ) : (
-          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+          <Suspense
+            fallback={
+              <Skeleton className="h-72 w-full min-w-0 rounded-xl md:h-96" />
+            }
+          >
             <RecentActivityTimeline
               rows={tables?.recentActivity}
               isLoading={sectionLoading}
@@ -230,12 +241,12 @@ export function DashboardPage() {
         )}
       </DashboardLazySection>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
+      <section className="min-w-0 space-y-3 md:space-y-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold break-words text-foreground">
             Quick Actions
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm break-words text-muted-foreground">
             Jump to common management workflows.
           </p>
         </div>

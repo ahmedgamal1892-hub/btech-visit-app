@@ -124,28 +124,32 @@ function DashboardDataTableInner<T>({
   }
 
   return (
-    <div className="surface-card overflow-hidden">
-      <div className="border-b border-border/70 px-5 py-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-foreground">{title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+    <div className="surface-card min-w-0 w-full max-w-full overflow-hidden">
+      <div className="border-b border-border/70 px-4 py-4 sm:px-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold break-words text-foreground">
+              {title}
+            </h3>
+            <p className="mt-1 text-sm break-words text-muted-foreground">
+              {description}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:w-auto md:justify-end">
             <SearchInput
               value={tableState.search}
               onChange={(event) => tableState.setSearch(event.target.value)}
               placeholder="Search table..."
-              className="min-w-[180px] flex-1 sm:flex-none"
+              className="w-full min-w-0 sm:min-w-[180px] sm:flex-1 md:flex-none"
             />
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="rounded-full"
+                className="w-full rounded-full sm:w-auto"
                 onClick={() => setShowColumns((current) => !current)}
               >
                 <Columns3 className="size-4" aria-hidden="true" />
@@ -176,7 +180,7 @@ function DashboardDataTableInner<T>({
               type="button"
               variant="outline"
               size="sm"
-              className="rounded-full"
+              className="w-full rounded-full sm:w-auto"
               onClick={handleExport}
               disabled={tableState.filteredRows.length === 0}
             >
@@ -187,7 +191,7 @@ function DashboardDataTableInner<T>({
         </div>
       </div>
 
-      <div className="p-2 sm:p-4">
+      <div className="min-w-0 p-2 sm:p-4">
         {isLoading ? (
           <div className="space-y-3 p-2">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -211,8 +215,8 @@ function DashboardDataTableInner<T>({
           />
         ) : (
           <>
-            <TableContainer>
-              <Table>
+            <TableContainer className="max-w-full">
+              <Table className="min-w-[480px]">
                 <TableHeader>
                   <TableRow>
                     {visibleColumns.map((column) => (
@@ -255,29 +259,29 @@ function DashboardDataTableInner<T>({
             </TableContainer>
 
             <div className="mt-4 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm break-words text-muted-foreground">
                 Showing {tableState.pageStart}-{tableState.pageEnd} of{' '}
                 {tableState.totalCount}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full"
+                  className="w-full rounded-full sm:w-auto"
                   disabled={tableState.page <= 1}
                   onClick={() => tableState.setPage(tableState.page - 1)}
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-center text-sm text-muted-foreground sm:text-left">
                   Page {tableState.page} of {tableState.totalPages}
                 </span>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full"
+                  className="w-full rounded-full sm:w-auto"
                   disabled={tableState.page >= tableState.totalPages}
                   onClick={() => tableState.setPage(tableState.page + 1)}
                 >

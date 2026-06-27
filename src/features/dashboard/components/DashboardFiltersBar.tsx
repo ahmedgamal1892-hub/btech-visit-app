@@ -9,6 +9,7 @@ import type {
   ExecutiveDashboardFilterOptions,
   ExecutiveDashboardFilters,
 } from '@/features/dashboard/types/executive-dashboard.types'
+import { cn } from '@/lib/utils'
 
 type DashboardFiltersBarProps = {
   filters: ExecutiveDashboardFilters
@@ -44,12 +45,15 @@ export function DashboardFiltersBar({
       onReset={onReset}
       onRefresh={onRefresh}
       isRefreshing={isRefreshing}
+      className="p-3 md:p-4 min-[1440px]:p-5"
+      actionsClassName="w-full flex-col sm:w-auto sm:flex-row [&>button]:w-full sm:[&>button]:w-auto"
       actions={
         <>
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className={cn('w-full sm:w-auto')}
             onClick={onExportPdf}
             disabled={!canExport}
             title="Export dashboard to PDF"
@@ -60,6 +64,7 @@ export function DashboardFiltersBar({
           <Button
             type="button"
             size="sm"
+            className={cn('w-full sm:w-auto')}
             onClick={onExportExcel}
             disabled={!canExport}
             title="Export dashboard to Excel"
@@ -70,8 +75,8 @@ export function DashboardFiltersBar({
         </>
       }
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="space-y-2">
+      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 min-[1440px]:grid-cols-4">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-from-date">From Date</Label>
           <Input
             id="dashboard-from-date"
@@ -81,7 +86,7 @@ export function DashboardFiltersBar({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-to-date">To Date</Label>
           <Input
             id="dashboard-to-date"
@@ -91,7 +96,7 @@ export function DashboardFiltersBar({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-visitor">Visitor</Label>
           <Select
             id="dashboard-visitor"
@@ -107,7 +112,7 @@ export function DashboardFiltersBar({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-branch">Branch</Label>
           <Select
             id="dashboard-branch"
@@ -123,7 +128,7 @@ export function DashboardFiltersBar({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-governorate">Governorate</Label>
           <Select
             id="dashboard-governorate"
@@ -139,7 +144,7 @@ export function DashboardFiltersBar({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-brand">Brand</Label>
           <Select
             id="dashboard-brand"
@@ -155,7 +160,7 @@ export function DashboardFiltersBar({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="dashboard-status">Visit Status</Label>
           <Select
             id="dashboard-status"

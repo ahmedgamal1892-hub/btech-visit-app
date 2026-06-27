@@ -29,12 +29,12 @@ export const RecentActivityTimeline = memo(function RecentActivityTimeline({
   }
 
   return (
-    <section className="rounded-2xl border border-border/80 bg-card shadow-sm">
-      <div className="border-b border-border/70 px-5 py-4">
-        <h2 className="text-lg font-semibold text-foreground">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
+      <div className="border-b border-border/70 px-4 py-4 sm:px-5">
+        <h2 className="text-lg font-semibold break-words text-foreground">
           Recent Activity
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm break-words text-muted-foreground">
           Latest submitted visits across the organization.
         </p>
       </div>
@@ -47,15 +47,15 @@ export const RecentActivityTimeline = memo(function RecentActivityTimeline({
           rows.map((row) => (
             <article
               key={row.visitId}
-              className="relative rounded-2xl border border-border/70 bg-background/60 p-4 pl-8 shadow-sm transition-colors hover:border-primary/20"
+              className="relative min-w-0 rounded-2xl border border-border/70 bg-background/60 p-4 pl-8 shadow-sm transition-colors hover:border-primary/20"
             >
               <span className="absolute top-5 left-3 size-2 rounded-full bg-primary" />
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="font-medium text-foreground">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0">
+                  <p className="font-medium break-words text-foreground">
                     {row.visitorName}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm break-words text-muted-foreground">
                     {row.branchName}
                   </p>
                 </div>

@@ -38,11 +38,11 @@ export const ManagementInsightsPanel = memo(function ManagementInsightsPanel({
 }: ManagementInsightsPanelProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 min-[1440px]:grid-cols-3 min-[1440px]:gap-4">
         {Array.from({ length: 10 }).map((_, index) => (
           <div
             key={index}
-            className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm"
+            className="min-w-0 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-5"
           >
             <Skeleton className="h-4 w-32" />
             <Skeleton className="mt-3 h-8 w-24" />
@@ -58,20 +58,20 @@ export const ManagementInsightsPanel = memo(function ManagementInsightsPanel({
   }
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="size-5 text-primary" aria-hidden="true" />
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
+    <section className="min-w-0 space-y-3 md:space-y-4">
+      <div className="flex min-w-0 items-start gap-2">
+        <Sparkles className="size-5 shrink-0 text-primary" aria-hidden="true" />
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold break-words text-foreground">
             Management Insights
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm break-words text-muted-foreground">
             Operational highlights for leadership and regional managers.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 min-[1440px]:grid-cols-3 min-[1440px]:gap-4">
         {insights.map((insight) => {
           const Icon =
             INSIGHT_ICONS[insight.id as keyof typeof INSIGHT_ICONS] ?? BarChart3
@@ -80,7 +80,7 @@ export const ManagementInsightsPanel = memo(function ManagementInsightsPanel({
             <article
               key={insight.id}
               className={cn(
-                'rounded-2xl border border-border/80 bg-card p-5 shadow-sm',
+                'min-w-0 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-5',
                 'transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md',
               )}
             >
@@ -89,10 +89,10 @@ export const ManagementInsightsPanel = memo(function ManagementInsightsPanel({
                   <p className="text-sm font-medium text-muted-foreground">
                     {insight.title}
                   </p>
-                  <p className="mt-2 truncate text-2xl font-bold text-foreground">
+                  <p className="mt-2 text-xl font-bold break-words text-foreground sm:text-2xl">
                     {insight.value}
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-2 text-xs leading-relaxed break-words text-muted-foreground">
                     {insight.description}
                   </p>
                 </div>

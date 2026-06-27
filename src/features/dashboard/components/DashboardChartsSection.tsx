@@ -14,7 +14,7 @@ export const DashboardChartsSection = memo(function DashboardChartsSection({
   isLoading = false,
 }: DashboardChartsSectionProps) {
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid min-w-0 grid-cols-1 gap-4 md:gap-5 min-[1440px]:grid-cols-2 min-[1440px]:gap-5">
       <DashboardChartCard
         title="Visits by Day"
         description="Submitted visits over the last 30 days."

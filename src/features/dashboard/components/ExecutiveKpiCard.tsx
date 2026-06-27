@@ -65,13 +65,13 @@ export const ExecutiveKpiCard = memo(function ExecutiveKpiCard({
   return (
     <Card
       className={cn(
-        'group overflow-hidden rounded-2xl border-border/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md',
+        'group min-w-0 w-full max-w-full overflow-hidden rounded-2xl border-border/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md',
         className,
       )}
     >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
         <div className="space-y-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium break-words text-muted-foreground">
             {title}
           </CardTitle>
           {trend ? <TrendIndicator trend={trend} /> : null}
@@ -89,7 +89,7 @@ export const ExecutiveKpiCard = memo(function ExecutiveKpiCard({
           </>
         ) : (
           <>
-            <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+            <p className="text-2xl font-bold tracking-tight break-words text-foreground tabular-nums sm:text-3xl">
               {value}
             </p>
             <CardDescription className="text-xs leading-relaxed">
@@ -111,7 +111,7 @@ export const ExecutiveKpiCard = memo(function ExecutiveKpiCard({
 
 export function ExecutiveKpiGridSkeleton({ count = 10 }: { count?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1440px]:grid-cols-4 min-[1440px]:gap-4">
       {Array.from({ length: count }).map((_, index) => (
         <Card key={index} className="rounded-2xl border-border/80 shadow-sm">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">

@@ -213,11 +213,11 @@ export const RecentVisitsTable = memo(function RecentVisitsTable({
 
 export function DashboardTablesSkeleton() {
   return (
-    <div className="grid gap-5 xl:grid-cols-3">
-      {Array.from({ length: 3 }).map((_, index) => (
+    <div className="grid min-w-0 grid-cols-1 gap-4 md:gap-5 min-[1440px]:grid-cols-2 min-[1440px]:gap-5">
+      {Array.from({ length: 2 }).map((_, index) => (
         <div
           key={index}
-          className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm"
+          className="min-w-0 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-5"
         >
           <Skeleton className="h-5 w-32" />
           <Skeleton className="mt-2 h-4 w-full" />

@@ -137,7 +137,7 @@ export const DashboardBarChart = memo(function DashboardBarChart({
       key={animationKey}
       className={cn('relative space-y-3', className)}
     >
-      <div className="flex h-56 items-end gap-1.5 sm:gap-2">
+      <div className="flex h-48 items-end gap-1.5 sm:h-56 sm:gap-2">
         {points.map((point, index) => (
           <div
             key={point.label}
@@ -257,12 +257,12 @@ export const DashboardChartCard = memo(function DashboardChartCard({
   isLoading = false,
 }: DashboardChartCardProps) {
   return (
-    <Card className="rounded-2xl border-border/80 shadow-sm transition-shadow duration-300 hover:shadow-md">
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+    <Card className="min-w-0 w-full max-w-full overflow-hidden rounded-2xl border-border/80 shadow-sm transition-shadow duration-300 hover:shadow-md">
+      <CardHeader className="min-w-0">
+        <CardTitle className="text-base break-words">{title}</CardTitle>
+        <CardDescription className="break-words">{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-w-0 overflow-hidden">
         {isLoading ? (
           <ChartSkeleton
             orientation={
@@ -290,7 +290,7 @@ export const DashboardChartCard = memo(function DashboardChartCard({
 
 export function DashboardChartsSkeleton() {
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid min-w-0 grid-cols-1 gap-4 md:gap-5 min-[1440px]:grid-cols-2 min-[1440px]:gap-5">
       {Array.from({ length: 7 }).map((_, index) => (
         <Card key={index} className="rounded-2xl border-border/80 shadow-sm">
           <CardHeader>

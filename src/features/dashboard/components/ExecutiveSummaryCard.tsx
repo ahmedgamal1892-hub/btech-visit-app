@@ -14,7 +14,7 @@ export function ExecutiveSummaryCard({
 }: ExecutiveSummaryCardProps) {
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
+      <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-4 shadow-sm sm:p-6">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="mt-4 h-10 w-full max-w-xl" />
         <Skeleton className="mt-3 h-4 w-56" />
@@ -28,14 +28,14 @@ export function ExecutiveSummaryCard({
   const completionPercent = summary?.completionPercent ?? 0
 
   return (
-    <section className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm transition-shadow duration-300 hover:shadow-md">
+    <section className="min-w-0 max-w-full rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-4 shadow-sm transition-shadow duration-300 hover:shadow-md sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+        <div className="min-w-0 space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary uppercase">
             <Building2 className="size-3.5" aria-hidden="true" />
             Executive Summary
           </div>
-          <p className="max-w-3xl text-xl font-semibold leading-relaxed text-foreground sm:text-2xl">
+          <p className="max-w-3xl text-lg leading-relaxed font-semibold break-words text-foreground min-[1440px]:text-2xl">
             <span className="text-primary">{totalBranches}</span> branches ·{' '}
             <span className="text-primary">{visitedBranches}</span> already
             visited · <span className="text-primary">{remainingBranches}</span>{' '}
@@ -48,7 +48,7 @@ export function ExecutiveSummaryCard({
           </p>
         </div>
 
-        <div className="flex min-w-[180px] flex-col items-start rounded-2xl border border-primary/20 bg-card/80 px-5 py-4 shadow-sm lg:items-end">
+        <div className="flex w-full min-w-0 flex-col items-stretch rounded-2xl border border-primary/20 bg-card/80 px-4 py-4 shadow-sm sm:px-5 lg:w-auto lg:min-w-[180px] lg:items-end">
           <div className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <TrendingUp className="size-4 text-primary" aria-hidden="true" />
             Completion Rate
