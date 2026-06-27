@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { AlertBanner, PageHeader } from '@/components/common'
-import { PrimaryButton } from '@/components/ui/action-buttons'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -37,6 +36,7 @@ import {
   getVisitProgressSteps,
 } from '@/features/visits/utils/visit-progress'
 import {
+  branchHasImportedDisplayStatus,
   buildAutoAddedProductDrafts,
   countAvailableBranchProducts,
   partitionVisitProducts,
@@ -145,18 +145,6 @@ export function NewVisitPage() {
   const draftVisitId = savedDraftVisitId ?? resumedDraft?.visitId ?? null
   const isFollowUpDraft = Boolean(resumedDraft?.isFollowUp)
 
-  const {
-    data: branchProducts = [],
-    isLoading: isBranchProductsLoading,
-    isFetching: isBranchProductsFetching,
-  } = useBranchProducts(activeBranchId || null)
-
-  const {
-    data: brandPerformance = [],
-    isLoading: isBrandPerformanceLoading,
-    isFetching: isBrandPerformanceFetching,
-  } = useBranchBrandPerformance(activeBranchId || null)
-
   const selectedBranch = useMemo(
     () =>
       branches.find((branch) => branch.id === activeBranchId) ??
@@ -169,6 +157,18 @@ export function NewVisitPage() {
         : null),
     [activeBranchId, branches, resumedDraft],
   )
+
+  const {
+    data: branchProducts = [],
+    isLoading: isBranchProductsLoading,
+    isFetching: isBranchProductsFetching,
+  } = useBranchProducts(activeBranchId || null, selectedBranch?.name ?? null)
+
+  const {
+    data: brandPerformance = [],
+    isLoading: isBrandPerformanceLoading,
+    isFetching: isBrandPerformanceFetching,
+  } = useBranchBrandPerformance(activeBranchId || null)
 
   const userLabel =
     profile?.full_name?.trim() || profile?.username || 'Unknown user'
@@ -213,6 +213,11 @@ export function NewVisitPage() {
   const { autoAdded: autoAddedProducts, manual: manualProducts } = useMemo(
     () => partitionVisitProducts(products),
     [products],
+  )
+
+  const hasImportedDisplayStatus = useMemo(
+    () => branchHasImportedDisplayStatus(branchProducts),
+    [branchProducts],
   )
 
   function renderProductCard(product: VisitProductDraft, index: number) {
@@ -580,16 +585,6 @@ export function NewVisitPage() {
               ? 'Complete the follow-up visit for the linked parent visit.'
               : 'Create a branch visit, review products, and capture notes and photos.'
           }
-          actions={
-            <PrimaryButton
-              type="button"
-              className="rounded-full"
-              onClick={handleAddProduct}
-            >
-              <Plus className="size-4" />
-              Add Product
-            </PrimaryButton>
-          }
         />
 
         <NewVisitHeader
@@ -708,8 +703,9 @@ export function NewVisitPage() {
                 branchProducts.length > 0 &&
                 products.length === 0 ? (
                   <p className="text-sm text-muted-foreground" role="status">
-                    Delisted and Dead products are added automatically. Use Add
-                    Product to inspect additional items.
+                    {hasImportedDisplayStatus
+                      ? 'Delisted and Dead products are added automatically. Use Add Product to inspect additional items.'
+                      : 'No inspection items yet. Add at least one product to continue.'}
                   </p>
                 ) : null}
 

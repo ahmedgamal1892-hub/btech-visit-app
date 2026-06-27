@@ -6,6 +6,12 @@ import type {
 } from '@/types/visit'
 import { isVisitProductStatus } from '@/types/visit'
 
+export function branchHasImportedDisplayStatus(
+  branchProducts: BranchProduct[],
+): boolean {
+  return branchProducts.some((product) => product.display_status !== null)
+}
+
 export function getImportedProductStatus(
   product: BranchProduct,
 ): VisitProductStatus | '' {
@@ -23,6 +29,10 @@ export function buildAutoAddedProductDrafts(
   branchProducts: BranchProduct[],
   existingProductIds: Set<string> = new Set(),
 ): VisitProductDraft[] {
+  if (!branchHasImportedDisplayStatus(branchProducts)) {
+    return []
+  }
+
   return branchProducts
     .filter(
       (product) =>

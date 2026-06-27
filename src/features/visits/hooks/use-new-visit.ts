@@ -22,10 +22,13 @@ export function useBranches() {
   })
 }
 
-export function useBranchProducts(branchId: string | null) {
+export function useBranchProducts(
+  branchId: string | null,
+  debugBranchName?: string | null,
+) {
   return useQuery({
     queryKey: [BRANCH_PRODUCTS_QUERY_KEY, branchId],
-    queryFn: () => loadBranchProducts(branchId!),
+    queryFn: () => loadBranchProducts(branchId!, debugBranchName),
     enabled: Boolean(branchId),
     staleTime: 30_000,
   })

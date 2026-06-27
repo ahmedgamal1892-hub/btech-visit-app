@@ -116,11 +116,11 @@ export type VisitProductDraft = {
 }
 
 export function isVisitProductIncomplete(product: VisitProductDraft): boolean {
-  return (
-    !product.brand ||
-    !product.productId ||
-    !isVisitProductStatus(product.status)
-  )
+  if (!product.productId) {
+    return true
+  }
+
+  return !isVisitProductStatus(product.status)
 }
 
 export type SubmitVisitInput = {

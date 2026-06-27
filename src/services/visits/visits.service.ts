@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/services/supabase/client'
+import { logStoreDisplayPostgrestRequest } from '@/services/supabase/log-store-display-request'
 import type {
   BranchBrandPerformanceRow,
   BranchProduct,
@@ -12,30 +13,87 @@ import {
   VISIT_PRODUCT_STATUSES,
 } from '@/types/visit'
 
+const BRANCH_PRODUCT_BASE_SELECT =
+  'id, store_id, brand, sub_category, item_code, product_name, display_qty'
+
 export async function loadBranches(): Promise<StoreBranch[]> {
   const supabase = getSupabaseClient()
 
-  const { data, error } = await supabase
-    .from('stores')
-    .select('id, name, budget_channel')
-    .order('name', { ascending: true })
+  const [storesResult, currentBatchResult] = await Promise.all([
+    supabase
+      .from('stores')
+      .select('id, name, budget_channel, batch_id, created_at')
+      .order('name', { ascending: true }),
+    supabase.rpc('get_current_import_batch'),
+  ])
 
-  if (error) {
-    throw new Error(error.message)
+  if (storesResult.error) {
+    throw new Error(storesResult.error.message)
   }
 
-  return data ?? []
+  const stores = storesResult.data ?? []
+  if (stores.length === 0) {
+    return []
+  }
+
+  const currentBatchId =
+    currentBatchResult.data && typeof currentBatchResult.data === 'object'
+      ? (currentBatchResult.data as { id?: string }).id
+      : null
+
+  const byName = new Map<string, (typeof stores)[number]>()
+
+  for (const store of stores) {
+    const key = store.name.trim()
+    const existing = byName.get(key)
+
+    if (!existing) {
+      byName.set(key, store)
+      continue
+    }
+
+    if (
+      branchStorePreferenceScore(store, currentBatchId) >
+      branchStorePreferenceScore(existing, currentBatchId)
+    ) {
+      byName.set(key, store)
+    }
+  }
+
+  return [...byName.values()]
+    .sort((left, right) =>
+      left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }),
+    )
+    .map(({ id, name, budget_channel }) => ({ id, name, budget_channel }))
+}
+
+function branchStorePreferenceScore(
+  store: { batch_id?: string | null; created_at?: string },
+  currentBatchId: string | null | undefined,
+): number {
+  let score = 0
+
+  if (currentBatchId && store.batch_id === currentBatchId) {
+    score += 100
+  }
+
+  if (store.created_at) {
+    score += new Date(store.created_at).getTime() / 1_000_000_000_000
+  }
+
+  return score
 }
 
 export async function loadBranchBrandPerformance(
   branchId: string,
 ): Promise<BranchBrandPerformanceRow[]> {
   const supabase = getSupabaseClient()
+  const resolvedStoreId = await resolveStoreIdForBranchProducts(supabase, branchId)
 
   const { data, error } = await supabase
     .from('sales_achievement')
     .select('brand, mtd_target, actual_sales, ach_percent')
-    .eq('store_id', branchId)
+    .eq('store_id', resolvedStoreId)
     .order('brand', { ascending: true })
 
   if (error) {
@@ -52,29 +110,239 @@ export async function loadBranchBrandPerformance(
 
 export async function loadBranchProducts(
   branchId: string,
+  debugBranchName?: string | null,
 ): Promise<BranchProduct[]> {
   const supabase = getSupabaseClient()
+  const resolvedStoreId = await resolveStoreIdForBranchProducts(
+    supabase,
+    branchId,
+  )
+
+  logStoreDisplayPostgrestRequest({
+    caller: 'loadBranchProducts',
+    method: 'GET',
+    select: BRANCH_PRODUCT_BASE_SELECT,
+    filters: {
+      store_id: `eq.${resolvedStoreId}`,
+    },
+    order: 'product_name.asc',
+  })
 
   const { data, error } = await supabase
     .from('store_display')
-    .select(
-      'id, store_id, brand, sub_category, item_code, product_name, display_qty, display_status',
-    )
-    .eq('store_id', branchId)
+    .select(BRANCH_PRODUCT_BASE_SELECT)
+    .eq('store_id', resolvedStoreId)
     .order('product_name', { ascending: true })
 
   if (error) {
     throw new Error(error.message)
   }
 
-  return (data ?? []).map((row) => ({
-    ...row,
+  const products = mapBranchProducts(data ?? [], { includeStatus: false })
+
+  console.log('[branch product load evidence]', {
+    selectedBranchName: debugBranchName ?? null,
+    selectedStoreId: branchId,
+    resolvedStoreId,
+    rowCount: (data ?? []).length,
+    firstProductName: data?.[0]?.product_name ?? null,
+  })
+
+  if (products.length === 0) {
+    return products
+  }
+
+  return mergeDisplayStatusWhenColumnExists(supabase, resolvedStoreId, products)
+}
+
+/**
+ * Snapshot imports can leave multiple store rows with the same name.
+ * Display products always belong to the current-batch store id.
+ * If the selected branch id has no display rows, resolve a sibling by name.
+ */
+async function resolveStoreIdForBranchProducts(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  branchId: string,
+): Promise<string> {
+  const hasDirectProducts = await storeHasDisplayProducts(supabase, branchId)
+  if (hasDirectProducts) {
+    return branchId
+  }
+
+  const { data: branch, error: branchError } = await supabase
+    .from('stores')
+    .select('id, name, batch_id')
+    .eq('id', branchId)
+    .maybeSingle()
+
+  if (branchError) {
+    throw new Error(branchError.message)
+  }
+
+  if (!branch?.name) {
+    return branchId
+  }
+
+  const { data: siblings, error: siblingsError } = await supabase
+    .from('stores')
+    .select('id, batch_id, created_at')
+    .eq('name', branch.name)
+    .order('created_at', { ascending: false })
+
+  if (siblingsError) {
+    throw new Error(siblingsError.message)
+  }
+
+  const siblingIds = (siblings ?? []).map((row) => row.id)
+  if (siblingIds.length === 0) {
+    return branchId
+  }
+
+  logStoreDisplayPostgrestRequest({
+    caller: 'resolveStoreIdForBranchProducts',
+    method: 'GET',
+    select: 'store_id',
+    filters: {
+      store_id: `in.(${siblingIds.join(',')})`,
+    },
+  })
+
+  const { data: displayRows, error: displayError } = await supabase
+    .from('store_display')
+    .select('store_id')
+    .in('store_id', siblingIds)
+
+  if (displayError) {
+    throw new Error(displayError.message)
+  }
+
+  const storeIdsWithProducts = [
+    ...new Set((displayRows ?? []).map((row) => String(row.store_id))),
+  ]
+
+  if (storeIdsWithProducts.length === 0) {
+    return branchId
+  }
+
+  if (storeIdsWithProducts.includes(branchId)) {
+    return branchId
+  }
+
+  const { data: currentBatch, error: batchError } = await supabase.rpc(
+    'get_current_import_batch',
+  )
+
+  if (!batchError && currentBatch && typeof currentBatch === 'object') {
+    const currentBatchId = (currentBatch as { id?: string }).id
+    const currentBatchStore = (siblings ?? []).find(
+      (store) =>
+        store.batch_id === currentBatchId &&
+        storeIdsWithProducts.includes(store.id),
+    )
+
+    if (currentBatchStore) {
+      return currentBatchStore.id
+    }
+  }
+
+  return storeIdsWithProducts[0]
+}
+
+async function storeHasDisplayProducts(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  storeId: string,
+): Promise<boolean> {
+  logStoreDisplayPostgrestRequest({
+    caller: 'storeHasDisplayProducts',
+    method: 'HEAD',
+    select: 'id',
+    filters: {
+      store_id: `eq.${storeId}`,
+    },
+    prefer: 'count=exact',
+  })
+
+  const { count, error } = await supabase
+    .from('store_display')
+    .select('id', { count: 'exact', head: true })
+    .eq('store_id', storeId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return (count ?? 0) > 0
+}
+
+async function mergeDisplayStatusWhenColumnExists(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  storeId: string,
+  products: BranchProduct[],
+): Promise<BranchProduct[]> {
+  logStoreDisplayPostgrestRequest({
+    caller: 'mergeDisplayStatusWhenColumnExists',
+    method: 'GET',
+    select: '*',
+    filters: {
+      store_id: `eq.${storeId}`,
+    },
+  })
+
+  const { data: fullRows, error } = await supabase
+    .from('store_display')
+    .select('*')
+    .eq('store_id', storeId)
+
+  if (error || !fullRows?.length) {
+    return products
+  }
+
+  const firstRow = fullRows[0] as Record<string, unknown>
+  if (!Object.prototype.hasOwnProperty.call(firstRow, 'display_status')) {
+    return products
+  }
+
+  const statusById = new Map(
+    fullRows.map((row) => [
+      String(row.id),
+      normalizeDisplayStatus(
+        (row as Record<string, unknown>).display_status,
+      ),
+    ]),
+  )
+
+  return products.map((product) => ({
+    ...product,
+    display_status: statusById.get(product.id) ?? null,
+  }))
+}
+
+function normalizeDisplayStatus(
+  value: unknown,
+): BranchProduct['display_status'] {
+  if (value === 'Display' || value === 'Delisted' || value === 'Dead') {
+    return value
+  }
+
+  return null
+}
+
+function mapBranchProducts(
+  rows: Array<Record<string, unknown>>,
+  options: { includeStatus?: boolean } = { includeStatus: true },
+): BranchProduct[] {
+  return rows.map((row) => ({
+    id: String(row.id),
+    store_id: String(row.store_id),
+    brand: String(row.brand),
+    sub_category: String(row.sub_category),
+    item_code: String(row.item_code),
+    product_name: String(row.product_name),
+    display_qty: Number(row.display_qty),
     display_status:
-      row.display_status === 'Display' ||
-      row.display_status === 'Delisted' ||
-      row.display_status === 'Dead'
-        ? row.display_status
-        : null,
+      options.includeStatus === false
+        ? null
+        : normalizeDisplayStatus(row.display_status),
   }))
 }
 

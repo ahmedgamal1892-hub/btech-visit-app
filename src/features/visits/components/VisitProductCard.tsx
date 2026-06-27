@@ -1,5 +1,5 @@
 import { Camera, ChevronDown, ImageIcon, Trash2 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -54,6 +54,10 @@ export function VisitProductCard({
   onChange,
   onRemove,
 }: VisitProductCardProps) {
+  const [brandFilterActive, setBrandFilterActive] = useState(
+    () => Boolean(product.brand && !product.productId),
+  )
+
   const brandOptions = useMemo(
     () =>
       branchBrands.map((brand) => ({
@@ -63,10 +67,74 @@ export function VisitProductCard({
     [branchBrands],
   )
 
-  const productsForBrand = useMemo(
-    () => getProductsForBrand(branchProducts, product.brand),
-    [branchProducts, product.brand],
-  )
+  const productsForBrand = useMemo(() => {
+    if (brandFilterActive && product.brand) {
+      return getProductsForBrand(branchProducts, product.brand)
+    }
+
+    return [...branchProducts].sort((a, b) =>
+      a.product_name.localeCompare(b.product_name, undefined, {
+        sensitivity: 'base',
+      }),
+    )
+  }, [branchProducts, brandFilterActive, product.brand])
+
+  function handleBrandChange(brand: string) {
+    if (!brand) {
+      setBrandFilterActive(false)
+
+      if (!product.productId) {
+        onChange({
+          ...product,
+          brand: '',
+        })
+        return
+      }
+
+      const branchProduct = branchProducts.find(
+        (item) => item.id === product.productId,
+      )
+
+      onChange({
+        ...product,
+        brand: branchProduct?.brand ?? product.brand,
+      })
+      return
+    }
+
+    setBrandFilterActive(true)
+    onChange({
+      ...product,
+      brand,
+      productId: '',
+    })
+  }
+
+  function handleProductChange(productId: string) {
+    if (!productId) {
+      onChange({
+        ...product,
+        productId: '',
+        status: '',
+        notes: '',
+        isAutoAdded: false,
+      })
+      return
+    }
+
+    const branchProduct = branchProducts.find((item) => item.id === productId)
+    const importedStatus = branchProduct
+      ? getImportedProductStatus(branchProduct)
+      : ''
+
+    onChange({
+      ...product,
+      productId,
+      brand: branchProduct?.brand ?? product.brand,
+      status: importedStatus || product.status,
+      isAutoAdded: false,
+    })
+  }
 
   const selectableProducts = productsForBrand.filter(
     (item) =>
@@ -184,22 +252,15 @@ export function VisitProductCard({
           className="space-y-5 border-t pt-6"
         >
           <div className="space-y-2">
-            <Label htmlFor={`brand-${product.clientId}`}>
-              Brand <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor={`brand-${product.clientId}`}>Brand</Label>
             <SearchableCombobox
               id={`brand-${product.clientId}`}
               options={brandOptions}
               value={product.brand}
-              onChange={(brand) =>
-                onChange({
-                  ...product,
-                  brand,
-                  productId: '',
-                })
-              }
+              onChange={handleBrandChange}
               placeholder="Select brand..."
               disabled={!hasBranch}
+              clearable
               emptyMessage="No brand found"
               aria-label="Select brand"
             />
@@ -213,23 +274,10 @@ export function VisitProductCard({
               id={`product-${product.clientId}`}
               options={productOptions}
               value={product.productId}
-              onChange={(productId) => {
-                const branchProduct = branchProducts.find(
-                  (item) => item.id === productId,
-                )
-                const importedStatus = branchProduct
-                  ? getImportedProductStatus(branchProduct)
-                  : ''
-
-                onChange({
-                  ...product,
-                  productId,
-                  status: importedStatus || product.status,
-                  isAutoAdded: false,
-                })
-              }}
+              onChange={handleProductChange}
               placeholder="Search product..."
-              disabled={!hasBranch || !product.brand}
+              disabled={!hasBranch}
+              clearable={!product.isAutoAdded}
               emptyMessage="No product found"
               aria-label="Search product"
             />

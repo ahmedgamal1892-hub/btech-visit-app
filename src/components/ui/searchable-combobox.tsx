@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronsUpDown, X } from 'lucide-react'
 import {
   useEffect,
   useId,
@@ -23,6 +23,7 @@ type SearchableComboboxProps = {
   onChange: (value: string) => void
   placeholder?: string
   disabled?: boolean
+  clearable?: boolean
   emptyMessage?: string
   'aria-label'?: string
 }
@@ -49,6 +50,7 @@ export function SearchableCombobox({
   onChange,
   placeholder = 'Search...',
   disabled = false,
+  clearable = false,
   emptyMessage = 'No results found',
   'aria-label': ariaLabel,
 }: SearchableComboboxProps) {
@@ -68,6 +70,14 @@ export function SearchableCombobox({
   )
 
   const displayValue = isOpen ? query : (selectedOption?.label ?? '')
+  const showClear = clearable && !disabled && Boolean(value)
+
+  function clearSelection() {
+    onChange('')
+    setQuery('')
+    setIsOpen(false)
+    inputRef.current?.blur()
+  }
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -176,8 +186,19 @@ export function SearchableCombobox({
             setIsOpen(true)
           }}
           onKeyDown={handleKeyDown}
-          className="pr-10"
+          className={cn(showClear ? 'pr-16' : 'pr-10')}
         />
+        {showClear ? (
+          <button
+            type="button"
+            className="absolute top-1/2 right-8 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Clear selection"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={clearSelection}
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        ) : null}
         <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
       </div>
 
