@@ -2,27 +2,32 @@ import { Loader2, Plus, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
-import { PageHeader } from '@/components/common'
+import { AlertBanner, PageHeader } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/action-buttons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import {
   AddUserDialog,
+  DeactivateUserDialog,
   DeleteUserDialog,
   EditUserDialog,
+  EnterpriseUserTable,
   ResetPasswordDialog,
-  UserFilters,
-  UserTable,
+  UserDetailsDrawer,
+  UserManagementFilters,
+  UserStatsCards,
+  UserTableSkeleton,
 } from '@/features/users/components'
 import {
-  createDefaultUserFilters,
+  createDefaultUserDirectoryFilters,
   useCreateUser,
   useDeleteUser,
   useResetUserPassword,
   useSetUserActive,
   useUpdateUser,
-  useUsers,
+  useUserDirectory,
+  useUserDirectoryStats,
 } from '@/features/users/hooks'
 import {
   canDeleteUser,
@@ -34,43 +39,45 @@ import type {
   ResetPasswordFormValues,
   UpdateUserFormValues,
 } from '@/lib/validations/users'
-import type { UserListFilters, UserProfile } from '@/types/user'
+import type { EnterpriseUserRow } from '@/features/users/types/user-directory.types'
+import type { UserDirectoryFilters } from '@/features/users/types/user-directory.types'
+import type { UserProfile } from '@/types/user'
 
 export function UsersPage() {
   const { user, isLoading: isAuthLoading, isAdmin, refreshProfile } = useAuth()
   const { toast } = useToast()
-  const [filters, setFilters] = useState<Omit<UserListFilters, 'search'>>(
-    () => {
-      const defaults = createDefaultUserFilters()
-      return {
-        role: defaults.role,
-        isActive: defaults.isActive,
-        page: defaults.page,
-        pageSize: defaults.pageSize,
-      }
-    },
+  const [filters, setFilters] = useState<UserDirectoryFilters>(() =>
+    createDefaultUserDirectoryFilters(),
   )
-  const [searchInput, setSearchInput] = useState('')
-  const debouncedSearch = useDebouncedValue(searchInput, 300)
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
-  const [resetUser, setResetUser] = useState<UserProfile | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null)
+  const debouncedNameSearch = useDebouncedValue(filters.nameSearch, 300)
+  const debouncedUsernameSearch = useDebouncedValue(filters.usernameSearch, 300)
 
-  const queryFilters = useMemo<UserListFilters>(
+  const queryFilters = useMemo<UserDirectoryFilters>(
     () => ({
       ...filters,
-      search: debouncedSearch,
+      nameSearch: debouncedNameSearch,
+      usernameSearch: debouncedUsernameSearch,
     }),
-    [filters, debouncedSearch],
+    [filters, debouncedNameSearch, debouncedUsernameSearch],
   )
 
-  const { data, isLoading, isError, error } = useUsers(queryFilters)
+  const { data: stats, isLoading: isStatsLoading } = useUserDirectoryStats()
+  const { data, isLoading, isError, error } = useUserDirectory(queryFilters)
   const createUserMutation = useCreateUser()
   const updateUserMutation = useUpdateUser()
   const resetPasswordMutation = useResetUserPassword()
   const setUserActiveMutation = useSetUserActive()
   const deleteUserMutation = useDeleteUser()
+
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<EnterpriseUserRow | null>(
+    null,
+  )
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
+  const [resetUser, setResetUser] = useState<UserProfile | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null)
+  const [deactivateTarget, setDeactivateTarget] =
+    useState<EnterpriseUserRow | null>(null)
   const [togglingUserId, setTogglingUserId] = useState<string | null>(null)
 
   const paginationLabel = useMemo(() => {
@@ -235,21 +242,19 @@ export function UsersPage() {
     setResetUser(null)
   }
 
-  const handleToggleActive = async (targetUser: UserProfile) => {
+  const handleActivateUser = async (targetUser: EnterpriseUserRow) => {
     setTogglingUserId(targetUser.id)
 
     try {
       const result = await setUserActiveMutation.mutateAsync({
         userId: targetUser.id,
-        isActive: !targetUser.is_active,
+        isActive: true,
       })
 
       if (!result.success) {
         toast({
           variant: 'error',
-          title: targetUser.is_active
-            ? 'Deactivation failed'
-            : 'Activation failed',
+          title: 'Activation failed',
           description: result.message,
         })
         return
@@ -257,11 +262,42 @@ export function UsersPage() {
 
       toast({
         variant: 'success',
-        title: targetUser.is_active ? 'User deactivated' : 'User activated',
-        description: `${targetUser.username} is now ${
-          targetUser.is_active ? 'inactive' : 'active'
-        }.`,
+        title: 'User activated',
+        description: `${targetUser.username} is now active.`,
       })
+    } finally {
+      setTogglingUserId(null)
+    }
+  }
+
+  const handleDeactivateUser = async () => {
+    if (!deactivateTarget) {
+      return
+    }
+
+    setTogglingUserId(deactivateTarget.id)
+
+    try {
+      const result = await setUserActiveMutation.mutateAsync({
+        userId: deactivateTarget.id,
+        isActive: false,
+      })
+
+      if (!result.success) {
+        toast({
+          variant: 'error',
+          title: 'Deactivation failed',
+          description: result.message,
+        })
+        return
+      }
+
+      toast({
+        variant: 'success',
+        title: 'User deactivated',
+        description: `${deactivateTarget.username} is now inactive.`,
+      })
+      setDeactivateTarget(null)
     } finally {
       setTogglingUserId(null)
     }
@@ -298,115 +334,131 @@ export function UsersPage() {
       description: `${deleteTarget.username} was removed successfully.`,
     })
     setDeleteTarget(null)
+    setSelectedUser(null)
+  }
+
+  const openResetPassword = (targetUser: EnterpriseUserRow | UserProfile) => {
+    setResetUser(targetUser)
+  }
+
+  const openEditUser = (targetUser: EnterpriseUserRow | UserProfile) => {
+    setEditingUser(targetUser)
+  }
+
+  const openDeleteUser = (targetUser: EnterpriseUserRow | UserProfile) => {
+    setDeleteTarget(targetUser)
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Users"
-        description="Manage application users, roles, and access."
+        title="User Management"
+        description="Manage application users, roles, access, and activity."
         icon={Users}
         actions={
-          <PrimaryButton type="button" onClick={() => setIsAddOpen(true)}>
-            <Plus className="size-4" />
-            Add User
-          </PrimaryButton>
+          isAdmin ? (
+            <PrimaryButton type="button" onClick={() => setIsAddOpen(true)}>
+              <Plus className="size-4" />
+              Add User
+            </PrimaryButton>
+          ) : null
         }
       />
+
+      <UserStatsCards stats={stats} isLoading={isStatsLoading} />
 
       <Card className="rounded-2xl border-border/70 shadow-sm">
         <CardHeader>
           <CardTitle>User Directory</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <UserFilters
-            filters={{
-              ...filters,
-              search: searchInput,
-            }}
-            onChange={(nextFilters) => {
-              setSearchInput(nextFilters.search)
-              setFilters({
-                role: nextFilters.role,
-                isActive: nextFilters.isActive,
-                page: 1,
-                pageSize: filters.pageSize,
-              })
-            }}
-          />
+          <UserManagementFilters filters={filters} onChange={setFilters} />
 
-          {isLoading && (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              Loading users...
-            </div>
-          )}
+          {isLoading ? <UserTableSkeleton /> : null}
 
-          {isError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-            >
-              {error instanceof Error ? error.message : 'Unable to load users.'}
-            </div>
-          )}
+          {isError ? (
+            <AlertBanner variant="error" title="Unable to load users">
+              {error instanceof Error ? error.message : 'Please try again.'}
+            </AlertBanner>
+          ) : null}
 
-          {!isLoading && !isError && data && (
+          {!isLoading && !isError && data ? (
             <>
-              <UserTable
+              <EnterpriseUserTable
                 users={data.users}
                 currentUserId={user?.id}
-                onEdit={setEditingUser}
-                onResetPassword={setResetUser}
-                onToggleActive={(targetUser) =>
-                  void handleToggleActive(targetUser)
-                }
-                onDelete={setDeleteTarget}
+                onSelectUser={setSelectedUser}
+                onEdit={openEditUser}
+                onResetPassword={openResetPassword}
+                onActivate={handleActivateUser}
+                onDeactivate={setDeactivateTarget}
+                onDelete={openDeleteUser}
                 togglingUserId={togglingUserId}
               />
 
-              <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {paginationLabel}
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={filters.page <= 1}
-                    onClick={() =>
-                      setFilters((current) => ({
-                        ...current,
-                        page: current.page - 1,
-                      }))
-                    }
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {data.page} of {data.totalPages}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={filters.page >= data.totalPages}
-                    onClick={() =>
-                      setFilters((current) => ({
-                        ...current,
-                        page: current.page + 1,
-                      }))
-                    }
-                  >
-                    Next
-                  </Button>
+              {data.totalCount > 0 ? (
+                <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {paginationLabel}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      disabled={filters.page <= 1}
+                      onClick={() =>
+                        setFilters((current) => ({
+                          ...current,
+                          page: current.page - 1,
+                        }))
+                      }
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {data.page} of {data.totalPages}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      disabled={filters.page >= data.totalPages}
+                      onClick={() =>
+                        setFilters((current) => ({
+                          ...current,
+                          page: current.page + 1,
+                        }))
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </>
-          )}
+          ) : null}
         </CardContent>
       </Card>
+
+      <UserDetailsDrawer
+        user={selectedUser}
+        open={Boolean(selectedUser)}
+        currentUserId={user?.id}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedUser(null)
+          }
+        }}
+        onEdit={openEditUser}
+        onResetPassword={openResetPassword}
+        onActivate={handleActivateUser}
+        onDeactivate={setDeactivateTarget}
+        onDelete={openDeleteUser}
+        togglingUserId={togglingUserId}
+      />
 
       <AddUserDialog
         open={isAddOpen}
@@ -440,6 +492,18 @@ export function UsersPage() {
         onSendResetEmail={handleSendResetEmail}
         isSubmitting={resetPasswordMutation.isPending}
         isSendingEmail={resetPasswordMutation.isPending}
+      />
+
+      <DeactivateUserDialog
+        user={deactivateTarget}
+        open={Boolean(deactivateTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeactivateTarget(null)
+          }
+        }}
+        onConfirm={handleDeactivateUser}
+        isSubmitting={setUserActiveMutation.isPending}
       />
 
       <DeleteUserDialog

@@ -17,6 +17,7 @@ import type {
 } from '@/types/user'
 
 import { DEFAULT_USERS_PAGE_SIZE, USERS_QUERY_KEY } from '../constants'
+import { userDirectoryQueryKeys } from './use-user-directory'
 
 export function useUsers(filters: UserListFilters) {
   return useQuery({
@@ -32,6 +33,11 @@ export function useCreateUser() {
     mutationFn: (input: CreateUserInput) => createUser(input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] })
+      await Promise.all(
+        userDirectoryQueryKeys().map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey: [queryKey] }),
+        ),
+      )
     },
   })
 }
@@ -49,6 +55,11 @@ export function useUpdateUser() {
     }) => updateUserProfile(userId, input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] })
+      await Promise.all(
+        userDirectoryQueryKeys().map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey: [queryKey] }),
+        ),
+      )
     },
   })
 }
@@ -66,6 +77,11 @@ export function useSetUserActive() {
     mutationFn: (input: SetUserActiveInput) => setUserActive(input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] })
+      await Promise.all(
+        userDirectoryQueryKeys().map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey: [queryKey] }),
+        ),
+      )
     },
   })
 }
@@ -77,6 +93,11 @@ export function useDeleteUser() {
     mutationFn: (userId: string) => deleteUser(userId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] })
+      await Promise.all(
+        userDirectoryQueryKeys().map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey: [queryKey] }),
+        ),
+      )
     },
   })
 }

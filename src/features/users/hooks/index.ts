@@ -7,3 +7,5 @@ export {
   useUpdateUser,
   useUsers,
 } from './use-users'
+export { useUserDirectory, useUserDirectoryStats } from './use-user-directory'
+export { createDefaultUserDirectoryFilters } from '../utils/user-directory'
