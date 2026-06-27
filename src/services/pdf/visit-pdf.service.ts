@@ -90,6 +90,10 @@ function getCreatedAt(details: VisitDetails): string {
 }
 
 function getReportReferenceDate(details: VisitDetails): string {
+  return details.visitDate
+}
+
+function getReportReferenceTime(details: VisitDetails): string {
   return details.submittedAt ?? details.visitDate
 }
 
@@ -111,6 +115,7 @@ function drawHeader(
   logoHeight: number,
 ) {
   const referenceDate = getReportReferenceDate(details)
+  const referenceTime = getReportReferenceTime(details)
   const textOffset = logoWidth + 6
 
   doc.addImage(logoDataUrl, 'PNG', MARGIN, cursor.y - 2, logoWidth, logoHeight)
@@ -147,7 +152,7 @@ function drawHeader(
   doc.text(formatPdfDate(referenceDate), rightX, cursor.y + 11, {
     align: 'right',
   })
-  doc.text(formatPdfTime(referenceDate), rightX, cursor.y + 18, {
+  doc.text(formatPdfTime(referenceTime), rightX, cursor.y + 18, {
     align: 'right',
   })
 

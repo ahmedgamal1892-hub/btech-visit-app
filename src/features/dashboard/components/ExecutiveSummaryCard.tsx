@@ -14,7 +14,7 @@ export function ExecutiveSummaryCard({
 }: ExecutiveSummaryCardProps) {
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-4 shadow-sm sm:p-6">
+      <div className="min-w-0 max-w-full rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-4 shadow-sm sm:p-6">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="mt-4 h-10 w-full max-w-xl" />
         <Skeleton className="mt-3 h-4 w-56" />

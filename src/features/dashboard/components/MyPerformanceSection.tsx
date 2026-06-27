@@ -51,7 +51,7 @@ export const MyPerformanceSection = memo(function MyPerformanceSection({
 }: MyPerformanceSectionProps) {
   if (isLoading) {
     return (
-      <section className="min-w-0 space-y-3 md:space-y-4">
+      <section className="min-w-0 max-w-full space-y-3 md:space-y-4">
         <Skeleton className="h-6 w-40" />
         <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 min-[1440px]:grid-cols-3 min-[1440px]:gap-4">
           {Array.from({ length: 9 }).map((_, index) => (
@@ -128,10 +128,10 @@ export const MyPerformanceSection = memo(function MyPerformanceSection({
             'min-w-0 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-card p-4 shadow-sm',
           )}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">My Current Rank</p>
-              <p className="mt-2 text-2xl font-bold text-primary">
+              <p className="mt-2 break-words text-2xl font-bold text-primary">
                 {rankLabel}
               </p>
             </div>

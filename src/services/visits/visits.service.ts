@@ -58,7 +58,7 @@ export async function loadBranchProducts(
   const { data, error } = await supabase
     .from('store_display')
     .select(
-      'id, store_id, brand, sub_category, item_code, product_name, display_qty',
+      'id, store_id, brand, sub_category, item_code, product_name, display_qty, display_status',
     )
     .eq('store_id', branchId)
     .order('product_name', { ascending: true })
@@ -67,7 +67,15 @@ export async function loadBranchProducts(
     throw new Error(error.message)
   }
 
-  return data ?? []
+  return (data ?? []).map((row) => ({
+    ...row,
+    display_status:
+      row.display_status === 'Display' ||
+      row.display_status === 'Delisted' ||
+      row.display_status === 'Dead'
+        ? row.display_status
+        : null,
+  }))
 }
 
 export function getDistinctBrands(products: BranchProduct[]): string[] {

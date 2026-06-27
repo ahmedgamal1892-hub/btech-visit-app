@@ -220,7 +220,7 @@ function buildVisitorReports(
       current.branches.add(visit.store_id)
     }
 
-    const visitDate = visit.submitted_at ?? visit.started_at
+    const visitDate = visit.started_at
     if (
       !current.lastVisit ||
       new Date(visitDate).getTime() > new Date(current.lastVisit).getTime()
@@ -299,7 +299,7 @@ function buildBranchReports(
 
     const topIssue = [...issueCounts.entries()].sort((a, b) => b[1] - a[1])[0]
     const lastVisit = branchVisits
-      .map((visit) => visit.submitted_at ?? visit.started_at)
+      .map((visit) => visit.started_at)
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0]
 
     const lastVisitDate = lastVisit ? startOfDay(new Date(lastVisit)) : null

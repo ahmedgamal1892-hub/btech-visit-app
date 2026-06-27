@@ -19,6 +19,7 @@ import {
   NewVisitProgress,
   NewVisitSummaryPanel,
   NewVisitValidationSummary,
+  VisitDateField,
   VisitPhotosUploader,
   VisitProductCard,
   useBranchBrandPerformance,
@@ -35,6 +36,12 @@ import {
   getVisitCompletionPercent,
   getVisitProgressSteps,
 } from '@/features/visits/utils/visit-progress'
+import {
+  buildAutoAddedProductDrafts,
+  countAvailableBranchProducts,
+  partitionVisitProducts,
+  sortVisitProducts,
+} from '@/features/visits/utils/auto-add-products'
 import { useAuth } from '@/hooks'
 import {
   canAddProduct,
@@ -42,6 +49,13 @@ import {
   validateNewVisit,
   type NewVisitSectionId,
 } from '@/lib/validations/new-visit'
+import {
+  formatVisitDateInputLabel,
+  getTodayDateInputValue,
+  isVisitDateAllowed,
+  startedAtToVisitDateInput,
+  visitDateInputToStartedAt,
+} from '@/lib/utils/visit-date'
 import { getDistinctBrands } from '@/services/visits'
 import type { VisitPhotoDraft, VisitProductDraft } from '@/types/visit'
 import { createFallbackVisitStatusOptions } from '@/types/visit'
@@ -105,6 +119,7 @@ export function NewVisitPage() {
   } = useVisitDraftResume(draftIdFromUrl, Boolean(draftIdFromUrl))
 
   const [branchId, setBranchId] = useState('')
+  const [visitDate, setVisitDate] = useState(getTodayDateInputValue)
   const [savedDraftVisitId, setSavedDraftVisitId] = useState<string | null>(
     draftIdFromUrl,
   )
@@ -124,6 +139,7 @@ export function NewVisitPage() {
   const [isDirty, setIsDirty] = useState(false)
   const [isDraftHydrated, setIsDraftHydrated] = useState(!draftIdFromUrl)
   const hasHydratedDraft = useRef(false)
+  const autoAddedBranchRef = useRef<string | null>(null)
 
   const activeBranchId = resumedDraft?.storeId ?? branchId
   const draftVisitId = savedDraftVisitId ?? resumedDraft?.visitId ?? null
@@ -156,6 +172,8 @@ export function NewVisitPage() {
 
   const userLabel =
     profile?.full_name?.trim() || profile?.username || 'Unknown user'
+
+  const visitDateLabel = formatVisitDateInputLabel(visitDate)
 
   const selectedProductIds = products
     .map((product) => product.productId)
@@ -192,6 +210,32 @@ export function NewVisitPage() {
 
   const firstVisitPhotoUrl = visitPhotos[0]?.previewUrl ?? null
 
+  const { autoAdded: autoAddedProducts, manual: manualProducts } = useMemo(
+    () => partitionVisitProducts(products),
+    [products],
+  )
+
+  function renderProductCard(product: VisitProductDraft, index: number) {
+    return (
+      <VisitProductCard
+        key={product.clientId}
+        index={index}
+        product={product}
+        branchBrands={branchBrands}
+        branchProducts={branchProducts}
+        hasBranch={Boolean(activeBranchId)}
+        statusOptions={visitStatuses}
+        selectedProductIds={selectedProductIds}
+        isExpanded={expandedProductId === product.clientId}
+        visitPhotosCount={visitPhotos.length}
+        firstVisitPhotoUrl={firstVisitPhotoUrl}
+        onToggleExpand={() => toggleProductExpanded(product.clientId)}
+        onChange={(nextProduct) => updateProduct(product.clientId, nextProduct)}
+        onRemove={() => removeProduct(product.clientId)}
+      />
+    )
+  }
+
   useEffect(() => {
     if (!resumedDraft || hasHydratedDraft.current) {
       return
@@ -201,7 +245,9 @@ export function NewVisitPage() {
     setIsDraftHydrated(true)
     setBranchId(resumedDraft.storeId)
     setSavedDraftVisitId(resumedDraft.visitId)
-    setProducts(resumedDraft.products)
+    setVisitDate(startedAtToVisitDateInput(resumedDraft.startedAt))
+    setProducts(sortVisitProducts(resumedDraft.products))
+    autoAddedBranchRef.current = resumedDraft.storeId
     setGeneralNotes(resumedDraft.generalNotes)
     setVisitNumberLabel(
       resumedDraft.visitNumber ??
@@ -209,6 +255,34 @@ export function NewVisitPage() {
     )
     setIsDirty(false)
   }, [resumedDraft])
+
+  useEffect(() => {
+    if (!activeBranchId || isProductsLoading || !isDraftHydrated) {
+      return
+    }
+
+    if (autoAddedBranchRef.current === activeBranchId) {
+      return
+    }
+
+    autoAddedBranchRef.current = activeBranchId
+
+    setProducts((currentProducts) => {
+      const existingProductIds = new Set(
+        currentProducts.map((product) => product.productId).filter(Boolean),
+      )
+      const autoAddedProducts = buildAutoAddedProductDrafts(
+        branchProducts,
+        existingProductIds,
+      )
+
+      if (autoAddedProducts.length === 0) {
+        return currentProducts
+      }
+
+      return sortVisitProducts([...autoAddedProducts, ...currentProducts])
+    })
+  }, [activeBranchId, branchProducts, isDraftHydrated, isProductsLoading])
 
   useEffect(() => {
     if (!isDraftResumeError) {
@@ -251,6 +325,7 @@ export function NewVisitPage() {
       storeName: selectedBranch.name,
       generalNotes,
       products,
+      startedAt: visitDateInputToStartedAt(visitDate),
     })
 
     if (!result.success) {
@@ -283,6 +358,7 @@ export function NewVisitPage() {
     setSearchParams,
     submitVisitMutation.isPending,
     toast,
+    visitDate,
     visitNumberLabel,
   ])
 
@@ -304,6 +380,7 @@ export function NewVisitPage() {
   }
 
   function handleBranchChange(nextBranchId: string) {
+    autoAddedBranchRef.current = null
     setBranchId(nextBranchId)
     setProducts([])
     setExpandedProductId(null)
@@ -348,9 +425,28 @@ export function NewVisitPage() {
       return
     }
 
+    const addedProductIds = new Set(
+      products.map((product) => product.productId).filter(Boolean),
+    )
+    const availableProducts = countAvailableBranchProducts(
+      branchProducts,
+      addedProductIds,
+    )
+
+    if (availableProducts === 0) {
+      const message = 'All branch products have already been added.'
+      setActionMessage(message)
+      toast({
+        variant: 'error',
+        title: 'No products available',
+        description: message,
+      })
+      return
+    }
+
     setActionMessage(null)
     const newProduct = createProductDraft()
-    setProducts((current) => [...current, newProduct])
+    setProducts((current) => sortVisitProducts([...current, newProduct]))
     setExpandedProductId(newProduct.clientId)
     markDirty()
   }
@@ -407,6 +503,18 @@ export function NewVisitPage() {
       return
     }
 
+    if (!isVisitDateAllowed(visitDate)) {
+      setShowValidationSummary(true)
+      setActionMessage('Visit date cannot be in the future.')
+      scrollToNewVisitSection('info')
+      toast({
+        variant: 'error',
+        title: 'Invalid visit date',
+        description: 'Visit date cannot be in the future.',
+      })
+      return
+    }
+
     setActionMessage(null)
     setShowValidationSummary(false)
 
@@ -414,6 +522,7 @@ export function NewVisitPage() {
       storeId: selectedBranch.id,
       storeName: selectedBranch.name,
       generalNotes,
+      startedAt: visitDateInputToStartedAt(visitDate),
       branchProducts,
       products,
       photos: visitPhotos,
@@ -440,6 +549,7 @@ export function NewVisitPage() {
       state: {
         visitId: result.visitId,
         visitNumber: result.visitNumber,
+        visitDate: visitDateInputToStartedAt(visitDate),
         submittedAt: new Date().toISOString(),
         branchName: selectedBranch.name,
         visitorName: userLabel,
@@ -485,6 +595,7 @@ export function NewVisitPage() {
         <NewVisitHeader
           visitNumberLabel={visitNumberLabel}
           userLabel={userLabel}
+          visitDateLabel={visitDateLabel}
           visitStatus={visitStatus}
         />
 
@@ -503,6 +614,22 @@ export function NewVisitPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6">
+            <NewVisitCollapsibleSection
+              sectionId="info"
+              title="Visit Information"
+              description="Set the date this visit took place."
+              expanded={expandedSections.info}
+              onToggle={() => toggleSection('info')}
+            >
+              <VisitDateField
+                value={visitDate}
+                onChange={(nextDate) => {
+                  setVisitDate(nextDate)
+                  markDirty()
+                }}
+              />
+            </NewVisitCollapsibleSection>
+
             <NewVisitCollapsibleSection
               sectionId="branch"
               title="Branch"
@@ -581,33 +708,45 @@ export function NewVisitPage() {
                 branchProducts.length > 0 &&
                 products.length === 0 ? (
                   <p className="text-sm text-muted-foreground" role="status">
-                    No inspection items yet. Add at least one product to
-                    continue.
+                    Delisted and Dead products are added automatically. Use Add
+                    Product to inspect additional items.
                   </p>
                 ) : null}
 
-                {products.map((product, index) => (
-                  <VisitProductCard
-                    key={product.clientId}
-                    index={index}
-                    product={product}
-                    branchBrands={branchBrands}
-                    branchProducts={branchProducts}
-                    hasBranch={Boolean(activeBranchId)}
-                    statusOptions={visitStatuses}
-                    selectedProductIds={selectedProductIds}
-                    isExpanded={expandedProductId === product.clientId}
-                    visitPhotosCount={visitPhotos.length}
-                    firstVisitPhotoUrl={firstVisitPhotoUrl}
-                    onToggleExpand={() =>
-                      toggleProductExpanded(product.clientId)
-                    }
-                    onChange={(nextProduct) =>
-                      updateProduct(product.clientId, nextProduct)
-                    }
-                    onRemove={() => removeProduct(product.clientId)}
-                  />
-                ))}
+                {autoAddedProducts.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="border-b border-border/70 pb-2">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Auto Added Products
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Loaded from the Display file because Status is Delisted
+                        or Dead.
+                      </p>
+                    </div>
+                    {autoAddedProducts.map((product, index) =>
+                      renderProductCard(product, index),
+                    )}
+                  </div>
+                ) : null}
+
+                {manualProducts.length > 0 ? (
+                  <div className="space-y-4">
+                    {autoAddedProducts.length > 0 ? (
+                      <div className="border-b border-border/70 pb-2 pt-2">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          Manually Added Products
+                        </h3>
+                      </div>
+                    ) : null}
+                    {manualProducts.map((product, index) =>
+                      renderProductCard(
+                        product,
+                        autoAddedProducts.length + index,
+                      ),
+                    )}
+                  </div>
+                ) : null}
 
                 <Button
                   type="button"
@@ -662,6 +801,7 @@ export function NewVisitPage() {
 
           <NewVisitSummaryPanel
             branchName={selectedBranch?.name ?? null}
+            visitDateLabel={visitDateLabel}
             productsCount={products.length}
             photosCount={visitPhotos.length}
             completionPercent={completionPercent}

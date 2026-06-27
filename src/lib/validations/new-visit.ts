@@ -50,6 +50,18 @@ export function validateNewVisit(input: {
         sectionId: 'inspection',
       })
     }
+
+    const productIds = input.products
+      .map((product) => product.productId)
+      .filter(Boolean)
+    const uniqueProductIds = new Set(productIds)
+
+    if (uniqueProductIds.size !== productIds.length) {
+      issues.push({
+        message: 'Each product can only be added once.',
+        sectionId: 'inspection',
+      })
+    }
   }
 
   return {

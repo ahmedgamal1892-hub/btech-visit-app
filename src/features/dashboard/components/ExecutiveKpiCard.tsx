@@ -70,13 +70,17 @@ export const ExecutiveKpiCard = memo(function ExecutiveKpiCard({
       )}
     >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-        <div className="space-y-2">
+        <div className="min-w-0 flex-1 space-y-2">
           <CardTitle className="text-sm font-medium break-words text-muted-foreground">
             {title}
           </CardTitle>
-          {trend ? <TrendIndicator trend={trend} /> : null}
+          {trend ? (
+            <span className="inline-block max-w-full">
+              <TrendIndicator trend={trend} />
+            </span>
+          ) : null}
         </div>
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
           <Icon className="size-4.5" aria-hidden="true" />
         </div>
       </CardHeader>
@@ -113,7 +117,10 @@ export function ExecutiveKpiGridSkeleton({ count = 10 }: { count?: number }) {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1440px]:grid-cols-4 min-[1440px]:gap-4">
       {Array.from({ length: count }).map((_, index) => (
-        <Card key={index} className="rounded-2xl border-border/80 shadow-sm">
+        <Card
+          key={index}
+          className="min-w-0 w-full max-w-full rounded-2xl border-border/80 shadow-sm"
+        >
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
             <div className="space-y-2">
               <Skeleton className="h-4 w-28" />

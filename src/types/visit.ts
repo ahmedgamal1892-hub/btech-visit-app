@@ -1,3 +1,5 @@
+import type { DisplayFileStatus } from '@/lib/import/display-status'
+
 export type StoreBranch = {
   id: string
   name: string
@@ -12,6 +14,7 @@ export type BranchProduct = {
   item_code: string
   product_name: string
   display_qty: number
+  display_status: DisplayFileStatus | null
 }
 
 export type BranchBrandPerformanceRow = {
@@ -109,6 +112,7 @@ export type VisitProductDraft = {
   productId: string
   status: VisitProductStatus | ''
   notes: string
+  isAutoAdded?: boolean
 }
 
 export function isVisitProductIncomplete(product: VisitProductDraft): boolean {
@@ -123,6 +127,7 @@ export type SubmitVisitInput = {
   storeId: string
   storeName: string
   generalNotes: string
+  startedAt: string
   branchProducts: BranchProduct[]
   products: VisitProductDraft[]
   photos: VisitPhotoDraft[]
@@ -137,6 +142,7 @@ export type SubmitVisitResult =
 export type VisitSubmitSuccessState = {
   visitId: string
   visitNumber: string
+  visitDate: string
   submittedAt: string
   branchName: string
   visitorName: string

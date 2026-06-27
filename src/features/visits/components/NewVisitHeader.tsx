@@ -8,14 +8,9 @@ import { cn } from '@/lib/utils'
 type NewVisitHeaderProps = {
   visitNumberLabel: string
   userLabel: string
+  visitDateLabel: string
   visitStatus: 'Draft' | 'Ready'
   className?: string
-}
-
-function formatCurrentDate(date: Date): string {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'full',
-  }).format(date)
 }
 
 function formatCurrentTime(date: Date): string {
@@ -27,6 +22,7 @@ function formatCurrentTime(date: Date): string {
 export function NewVisitHeader({
   visitNumberLabel,
   userLabel,
+  visitDateLabel,
   visitStatus,
   className,
 }: NewVisitHeaderProps) {
@@ -82,10 +78,10 @@ export function NewVisitHeader({
           <div className="rounded-xl border border-border/60 bg-background/70 p-4">
             <dt className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               <CalendarDays className="size-3.5" />
-              Current Date
+              Visit Date
             </dt>
             <dd className="mt-2 text-sm font-semibold text-foreground">
-              {formatCurrentDate(now)}
+              {visitDateLabel}
             </dd>
           </div>
           <div className="rounded-xl border border-border/60 bg-background/70 p-4">

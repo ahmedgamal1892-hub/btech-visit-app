@@ -28,6 +28,7 @@ export type StoreDisplayPayload = {
   item_code: string
   product_name: string
   display_qty: number
+  display_status: 'Display' | 'Delisted' | 'Dead'
 }
 
 export type SalesAchievementPayload = {

@@ -17,7 +17,7 @@ export const RecentActivityTimeline = memo(function RecentActivityTimeline({
 }: RecentActivityTimelineProps) {
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+      <div className="min-w-0 max-w-full rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
         <Skeleton className="h-6 w-40" />
         <div className="mt-4 space-y-4">
           {Array.from({ length: 6 }).map((_, index) => (

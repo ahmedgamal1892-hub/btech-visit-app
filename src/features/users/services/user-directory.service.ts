@@ -110,7 +110,7 @@ export async function fetchUserVisitMetricsMap(): Promise<
       continue
     }
 
-    const visitDate = visit.submitted_at ?? visit.started_at
+    const visitDate = visit.started_at
     const current = metrics.get(visitorId) ?? {
       totalVisits: 0,
       lastVisitDate: null,

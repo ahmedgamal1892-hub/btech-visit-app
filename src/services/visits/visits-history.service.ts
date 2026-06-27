@@ -81,12 +81,42 @@ export async function fetchVisitHistory(
   const payload = data as VisitHistoryRpcResponse
 
   return {
-    rows: (payload.rows ?? []).map(mapRow),
+    rows: await enrichVisitHistoryDates((payload.rows ?? []).map(mapRow)),
     totalCount: payload.total_count ?? 0,
     page: payload.page ?? filters.page,
     pageSize: payload.page_size ?? filters.pageSize,
     totalPages: payload.total_pages ?? 1,
   }
+}
+
+async function enrichVisitHistoryDates(
+  rows: VisitHistoryRow[],
+): Promise<VisitHistoryRow[]> {
+  if (rows.length === 0) {
+    return rows
+  }
+
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from('visits')
+    .select('id, started_at')
+    .in(
+      'id',
+      rows.map((row) => row.visitId),
+    )
+
+  if (error || !data) {
+    return rows
+  }
+
+  const startedAtByVisitId = new Map(
+    data.map((visit) => [visit.id, visit.started_at as string]),
+  )
+
+  return rows.map((row) => ({
+    ...row,
+    visitDate: startedAtByVisitId.get(row.visitId) ?? row.visitDate,
+  }))
 }
 
 export async function fetchVisitHistoryVisitors(): Promise<

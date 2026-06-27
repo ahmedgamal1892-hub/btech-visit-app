@@ -16,7 +16,7 @@ export function DashboardLazySection({
   children,
 }: DashboardLazySectionProps) {
   return (
-    <section className="min-w-0 space-y-3 md:space-y-4">
+    <section className="min-w-0 max-w-full space-y-3 md:space-y-4">
       <div className="min-w-0">
         <h2 className="text-lg font-semibold break-words text-foreground">
           {title}

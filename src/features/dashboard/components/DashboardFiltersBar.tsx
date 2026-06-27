@@ -45,7 +45,7 @@ export function DashboardFiltersBar({
       onReset={onReset}
       onRefresh={onRefresh}
       isRefreshing={isRefreshing}
-      className="p-3 md:p-4 min-[1440px]:p-5"
+      className="min-w-0 max-w-full p-3 md:p-4 min-[1440px]:p-5"
       actionsClassName="w-full flex-col sm:w-auto sm:flex-row [&>button]:w-full sm:[&>button]:w-auto"
       actions={
         <>

@@ -29,13 +29,13 @@ export function PageFiltersBar({
 }: PageFiltersBarProps) {
   return (
     <section
-      className={cn('filter-bar', className)}
+      className={cn('filter-bar min-w-0 max-w-full overflow-hidden', className)}
       aria-label={`${title} filters`}
     >
-      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-4 flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           <Filter className="size-4 shrink-0 text-primary" aria-hidden="true" />
-          <div>
+          <div className="min-w-0">
             <h3 className="section-title text-base">{title}</h3>
             {description ? (
               <p className="text-xs text-muted-foreground">{description}</p>

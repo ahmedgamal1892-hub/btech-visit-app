@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { getProductsForBrand } from '@/services/visits'
+import { getImportedProductStatus } from '@/features/visits/utils/auto-add-products'
 import type {
   BranchProduct,
   VisitProductDraft,
@@ -115,6 +116,11 @@ export function VisitProductCard({
               <span className="text-sm font-semibold sm:text-base">
                 {selectedProduct?.product_name || `Product #${index + 1}`}
               </span>
+              {product.isAutoAdded ? (
+                <Badge variant="secondary" className="rounded-full">
+                  Auto Added
+                </Badge>
+              ) : null}
               {isIncomplete ? (
                 <Badge variant="secondary" className="rounded-full">
                   Incomplete
@@ -146,7 +152,7 @@ export function VisitProductCard({
               </p>
               <p className="text-muted-foreground">
                 <span className="font-medium text-foreground">Condition:</span>{' '}
-                {selectedProduct?.sub_category?.trim() || product.status || '—'}
+                {selectedProduct?.sub_category?.trim() || '—'}
               </p>
               <p className="text-muted-foreground sm:col-span-2 xl:col-span-3">
                 <span className="font-medium text-foreground">Notes:</span>{' '}
@@ -207,12 +213,21 @@ export function VisitProductCard({
               id={`product-${product.clientId}`}
               options={productOptions}
               value={product.productId}
-              onChange={(productId) =>
+              onChange={(productId) => {
+                const branchProduct = branchProducts.find(
+                  (item) => item.id === productId,
+                )
+                const importedStatus = branchProduct
+                  ? getImportedProductStatus(branchProduct)
+                  : ''
+
                 onChange({
                   ...product,
                   productId,
+                  status: importedStatus || product.status,
+                  isAutoAdded: false,
                 })
-              }
+              }}
               placeholder="Search product..."
               disabled={!hasBranch || !product.brand}
               emptyMessage="No product found"
@@ -221,7 +236,9 @@ export function VisitProductCard({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor={`status-${product.clientId}`}>Status</Label>
+            <Label htmlFor={`status-${product.clientId}`}>
+              Status <span className="text-destructive">*</span>
+            </Label>
             <Select
               id={`status-${product.clientId}`}
               value={product.status}

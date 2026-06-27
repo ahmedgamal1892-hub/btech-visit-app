@@ -10,6 +10,7 @@ export {
   NewVisitProgress,
   NewVisitSummaryPanel,
   NewVisitValidationSummary,
+  VisitDateField,
   VisitPhotosCard,
   VisitPhotosUploader,
   VisitProductCard,

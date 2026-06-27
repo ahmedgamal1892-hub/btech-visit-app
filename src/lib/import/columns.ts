@@ -5,6 +5,7 @@ export const DISPLAY_REQUIRED_COLUMNS = [
   'Item Code',
   'Product Name',
   'Display Qty',
+  'Status',
 ] as const
 
 export const DISPLAY_OPTIONAL_COLUMNS = ['Budget Channel'] as const
@@ -25,6 +26,7 @@ const DISPLAY_ALIASES: Record<string, string[]> = {
   'Product Name': ['product name', 'productname', 'product'],
   'Display Qty': ['display qty', 'displayqty', 'qty', 'quantity'],
   'Budget Channel': ['budget channel', 'budgetchannel', 'channel'],
+  Status: ['status', 'product status', 'display status'],
 }
 
 const ACH_ALIASES: Record<string, string[]> = {

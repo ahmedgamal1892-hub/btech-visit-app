@@ -104,9 +104,7 @@ export function buildPersonalPerformance(
       monthStart,
       todayEnd,
     ),
-    lastVisitDate: lastVisit
-      ? (lastVisit.submitted_at ?? lastVisit.started_at)
-      : null,
+    lastVisitDate: lastVisit ? lastVisit.started_at : null,
     lastBranchVisited: lastVisit?.store_name ?? null,
     totalPhotosUploaded: source.photos.filter((photo) =>
       filteredVisitIds.has(photo.visit_id),

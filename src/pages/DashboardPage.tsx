@@ -98,7 +98,7 @@ export function DashboardPage() {
   const sectionLoading = isFetching && !data
 
   return (
-    <div className="dashboard-page page-stack">
+    <div className="dashboard-page page-stack w-full min-w-0 max-w-full">
       <PageHeader
         title="Executive Dashboard"
         description="Management overview for regional performance, visit activity, and operational coverage."
@@ -241,7 +241,7 @@ export function DashboardPage() {
         )}
       </DashboardLazySection>
 
-      <section className="min-w-0 space-y-3 md:space-y-4">
+      <section className="min-w-0 max-w-full space-y-3 md:space-y-4">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold break-words text-foreground">
             Quick Actions

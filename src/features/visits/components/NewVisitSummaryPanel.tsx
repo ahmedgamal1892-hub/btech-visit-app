@@ -1,5 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
-import { Camera, ClipboardList, MapPin, Percent } from 'lucide-react'
+import {
+  CalendarDays,
+  Camera,
+  ClipboardList,
+  MapPin,
+  Percent,
+} from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -7,6 +13,7 @@ import { cn } from '@/lib/utils'
 
 type NewVisitSummaryPanelProps = {
   branchName: string | null
+  visitDateLabel: string
   productsCount: number
   photosCount: number
   completionPercent: number
@@ -37,6 +44,7 @@ function SummaryRow({
 
 export function NewVisitSummaryPanel({
   branchName,
+  visitDateLabel,
   productsCount,
   photosCount,
   completionPercent,
@@ -57,6 +65,11 @@ export function NewVisitSummaryPanel({
           icon={MapPin}
           label="Branch"
           value={branchName ?? 'Not selected'}
+        />
+        <SummaryRow
+          icon={CalendarDays}
+          label="Visit Date"
+          value={visitDateLabel}
         />
         <SummaryRow
           icon={ClipboardList}

@@ -21,7 +21,7 @@ function parseDateBoundary(
 }
 
 function getVisitDate(visit: ReportsVisitRow): Date {
-  return new Date(visit.submitted_at ?? visit.started_at)
+  return new Date(visit.started_at)
 }
 
 export function filterReportsVisits(

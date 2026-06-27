@@ -1,5 +1,9 @@
 import { getSupabaseClient } from '@/services/supabase/client'
 import type { VisitProductDraft } from '@/types/visit'
+import {
+  isVisitDateAllowed,
+  startedAtToVisitDateInput,
+} from '@/lib/utils/visit-date'
 
 export type SaveVisitDraftInput = {
   visitId: string | null
@@ -7,6 +11,7 @@ export type SaveVisitDraftInput = {
   storeName: string
   generalNotes: string
   products: VisitProductDraft[]
+  startedAt: string
 }
 
 export type SaveVisitDraftResult =
@@ -21,6 +26,7 @@ export type VisitDraftResumeData = {
   products: VisitProductDraft[]
   visitNumber: string | null
   isFollowUp: boolean
+  startedAt: string
 }
 
 function serializeInspectionItems(products: VisitProductDraft[]) {
@@ -30,6 +36,7 @@ function serializeInspectionItems(products: VisitProductDraft[]) {
     productId: product.productId,
     status: product.status,
     notes: product.notes,
+    isAutoAdded: product.isAutoAdded ?? false,
   }))
 }
 
@@ -58,6 +65,7 @@ function parseInspectionItems(value: unknown): VisitProductDraft[] {
             ? (record.status as VisitProductDraft['status'])
             : '',
         notes: typeof record.notes === 'string' ? record.notes : '',
+        ...(record.isAutoAdded === true ? { isAutoAdded: true } : {}),
       }
     })
     .filter((item): item is VisitProductDraft => item !== null)
@@ -66,6 +74,13 @@ function parseInspectionItems(value: unknown): VisitProductDraft[] {
 export async function saveVisitDraft(
   input: SaveVisitDraftInput,
 ): Promise<SaveVisitDraftResult> {
+  if (!isVisitDateAllowed(startedAtToVisitDateInput(input.startedAt))) {
+    return {
+      success: false,
+      message: 'Visit date cannot be in the future.',
+    }
+  }
+
   const supabase = getSupabaseClient()
 
   const { data, error } = await supabase.rpc('save_visit_draft', {
@@ -74,7 +89,7 @@ export async function saveVisitDraft(
     p_store_name: input.storeName,
     p_general_notes: input.generalNotes,
     p_inspection_items: serializeInspectionItems(input.products),
-    p_started_at: new Date().toISOString(),
+    p_started_at: input.startedAt,
   })
 
   if (error) {
@@ -114,7 +129,7 @@ export async function fetchVisitDraftForResume(
   const { data, error } = await supabase
     .from('visits')
     .select(
-      'id, store_id, store_name, general_notes, draft_inspection_items, visit_number, status, user_id, parent_visit_id',
+      'id, store_id, store_name, general_notes, draft_inspection_items, visit_number, status, user_id, parent_visit_id, started_at',
     )
     .eq('id', draftVisitId)
     .maybeSingle()
@@ -147,6 +162,7 @@ export async function fetchVisitDraftForResume(
     products: parseInspectionItems(data.draft_inspection_items),
     visitNumber: data.visit_number,
     isFollowUp: Boolean(data.parent_visit_id),
+    startedAt: data.started_at,
   }
 }
 

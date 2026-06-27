@@ -552,7 +552,7 @@ export function buildExecutiveDashboardTables(
       visits: 0,
       lastVisitDate: null,
     }
-    const visitDate = visit.submitted_at ?? visit.started_at
+    const visitDate = visit.started_at
 
     current.visits += 1
 
@@ -602,7 +602,7 @@ export function buildExecutiveDashboardTables(
     )
     .map((visit) => ({
       visitId: visit.id,
-      visitDate: visit.submitted_at ?? visit.started_at,
+      visitDate: visit.started_at,
       branchName: visit.store_name,
       visitorName: profileNames.get(visit.user_id) ?? 'Unknown visitor',
       status: visit.status,

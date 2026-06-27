@@ -6,6 +6,7 @@ import {
   mapAchHeaders,
   mapDisplayHeaders,
 } from '@/lib/import/columns'
+import { normalizeDisplayFileStatus } from '@/lib/import/display-status'
 import type {
   ImportValidationError,
   ParsedAchSheet,
@@ -116,6 +117,7 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
     const itemCode = cellValue(row, mapping['Item Code'])
     const productName = cellValue(row, mapping['Product Name'])
     const displayQtyRaw = cellValue(row, mapping['Display Qty'])
+    const statusRaw = cellValue(row, mapping.Status)
 
     if (
       !storeName &&
@@ -123,7 +125,8 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       !subCategory &&
       !itemCode &&
       !productName &&
-      !displayQtyRaw
+      !displayQtyRaw &&
+      !statusRaw
     ) {
       continue
     }
@@ -185,6 +188,25 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       })
     }
 
+    if (!statusRaw) {
+      errors.push({
+        sheet: 'display',
+        row: excelRow,
+        column: 'Status',
+        message: 'Status is required.',
+      })
+    }
+
+    const displayStatus = normalizeDisplayFileStatus(statusRaw)
+    if (statusRaw && !displayStatus) {
+      errors.push({
+        sheet: 'display',
+        row: excelRow,
+        column: 'Status',
+        message: 'Status must be Display, Delisted, or Dead.',
+      })
+    }
+
     if (mapping['Budget Channel'] !== undefined) {
       const budgetChannel = cellValue(row, mapping['Budget Channel'])
       if (budgetChannel && storeName) {
@@ -196,6 +218,10 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       continue
     }
 
+    if (!displayStatus) {
+      continue
+    }
+
     parsedRows.push({
       store_name: storeName,
       brand,
@@ -203,6 +229,7 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       item_code: itemCode,
       product_name: productName,
       display_qty: displayQty,
+      display_status: displayStatus,
     })
   }
 

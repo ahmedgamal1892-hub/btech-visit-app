@@ -36,8 +36,7 @@ export function parseDateBoundary(
 }
 
 export function getVisitDate(visit: DashboardVisitRow): Date {
-  const value = visit.submitted_at ?? visit.started_at
-  return new Date(value)
+  return new Date(visit.started_at)
 }
 
 export function formatDurationLabel(totalMinutes: number): string {

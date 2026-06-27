@@ -87,8 +87,11 @@ export const DashboardBarChart = memo(function DashboardBarChart({
 
   const maxValue = Math.max(...points.map((point) => point.value), 1)
   const compactLabels = width > 0 && width < 480
+  const useHorizontalLayout =
+    orientation === 'horizontal' ||
+    (orientation === 'vertical' && width > 0 && width < 768)
 
-  if (orientation === 'horizontal') {
+  if (useHorizontalLayout) {
     return (
       <div ref={ref} key={animationKey} className={cn('space-y-3', className)}>
         {points.map((point, index) => (
@@ -292,7 +295,10 @@ export function DashboardChartsSkeleton() {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-4 md:gap-5 min-[1440px]:grid-cols-2 min-[1440px]:gap-5">
       {Array.from({ length: 7 }).map((_, index) => (
-        <Card key={index} className="rounded-2xl border-border/80 shadow-sm">
+        <Card
+          key={index}
+          className="min-w-0 w-full max-w-full rounded-2xl border-border/80 shadow-sm"
+        >
           <CardHeader>
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-4 w-full" />

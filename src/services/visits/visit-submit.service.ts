@@ -7,6 +7,10 @@ import type {
   VisitStatusOption,
 } from '@/types/visit'
 import { isVisitProductStatus } from '@/types/visit'
+import {
+  isVisitDateAllowed,
+  startedAtToVisitDateInput,
+} from '@/lib/utils/visit-date'
 import { validateNewVisit } from '@/lib/validations/new-visit'
 
 import {
@@ -313,7 +317,15 @@ export async function submitVisit(
   }
 
   const photosToUpload = input.photos.filter((photo) => photo.file)
-  const startedAt = new Date().toISOString()
+  const startedAt = input.startedAt
+
+  if (!isVisitDateAllowed(startedAtToVisitDateInput(startedAt))) {
+    return {
+      success: false,
+      message: 'Visit date cannot be in the future.',
+    }
+  }
+
   let visitId: string | null = input.draftVisitId ?? null
   let uploadedStoragePaths: string[] = []
 

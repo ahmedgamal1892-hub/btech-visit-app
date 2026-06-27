@@ -25,19 +25,23 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         {Icon && (
           <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Icon className="size-6" aria-hidden="true" />
           </div>
         )}
-        <div>
-          <h1 className="page-title">{title}</h1>
-          {description && <p className="page-description">{description}</p>}
+        <div className="min-w-0">
+          <h1 className="page-title break-words">{title}</h1>
+          {description && (
+            <p className="page-description break-words">{description}</p>
+          )}
         </div>
       </div>
       {actions && (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
+          {actions}
+        </div>
       )}
     </div>
   )

@@ -16,7 +16,7 @@ function TableContainer({
     <div
       data-slot="table-container"
       className={cn(
-        'relative w-full overflow-auto rounded-2xl border border-border bg-card shadow-sm',
+        'relative w-full min-w-0 max-w-full overflow-x-auto overflow-y-visible rounded-2xl border border-border bg-card shadow-sm',
         className,
       )}
       style={maxHeight ? { maxHeight } : undefined}

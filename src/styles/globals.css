@@ -131,13 +131,18 @@
   }
 
   .dashboard-page {
-    @apply min-w-0 max-w-full overflow-x-hidden;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
   }
 
   .dashboard-page [data-slot='card'],
   .dashboard-page .surface-card,
-  .dashboard-page .filter-bar {
-    @apply min-w-0 max-w-full;
+  .dashboard-page .filter-bar,
+  .dashboard-page [data-slot='table-container'] {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 

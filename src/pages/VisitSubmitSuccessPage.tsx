@@ -16,6 +16,12 @@ import {
 } from '@/components/ui/card'
 import type { VisitSubmitSuccessState } from '@/types/visit'
 
+function formatVisitDate(value: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'full',
+  }).format(new Date(value))
+}
+
 function formatSubmittedAt(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'full',
@@ -35,6 +41,7 @@ function isVisitSubmitSuccessState(
   return (
     typeof state.visitId === 'string' &&
     typeof state.visitNumber === 'string' &&
+    typeof state.visitDate === 'string' &&
     typeof state.submittedAt === 'string' &&
     typeof state.branchName === 'string' &&
     typeof state.visitorName === 'string'
@@ -78,6 +85,12 @@ export function VisitSubmitSuccessPage() {
               <dt className="text-sm text-muted-foreground">Branch</dt>
               <dd className="mt-1 font-semibold text-foreground">
                 {state.branchName}
+              </dd>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/15 p-4">
+              <dt className="text-sm text-muted-foreground">Visit Date</dt>
+              <dd className="mt-1 font-semibold text-foreground">
+                {formatVisitDate(state.visitDate)}
               </dd>
             </div>
             <div className="rounded-xl border border-border/60 bg-muted/15 p-4">
