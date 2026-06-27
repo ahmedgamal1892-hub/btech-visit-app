@@ -29,7 +29,7 @@ INSERT INTO public.app_settings (key, value, description)
 VALUES
   (
     'app.name',
-    '"Visit APP By Gimi"'::JSONB,
+    '"BTECH Visit App"'::JSONB,
     'Application display name.'
   ),
   (

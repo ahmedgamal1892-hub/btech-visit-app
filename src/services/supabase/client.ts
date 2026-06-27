@@ -1,19 +1,27 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-import { getSupabaseEnvConfig, validateSupabaseEnv } from '@/lib/env'
+import { validateSupabaseEnv } from '@/lib/env'
 
 let supabaseInstance: SupabaseClient | null = null
 
+function getProjectUrl(): string {
+  const url = import.meta.env.VITE_SUPABASE_URL?.trim() ?? ''
+
+  return url.replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '')
+}
+
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseInstance) {
-    const config = getSupabaseEnvConfig()
-
-    supabaseInstance = createClient(config.url, config.anonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
+    supabaseInstance = createClient(
+      getProjectUrl(),
+      import.meta.env.VITE_SUPABASE_ANON_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+        },
       },
-    })
+    )
   }
 
   return supabaseInstance
