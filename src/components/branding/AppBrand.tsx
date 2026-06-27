@@ -1,12 +1,13 @@
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants/branding'
 import { cn } from '@/lib/utils'
 
-import { AppLogo } from './AppLogo'
+import { AppLogo, type AppLogoSize } from './AppLogo'
 
 type AppBrandProps = {
   variant?: 'default' | 'on-dark'
   showTagline?: boolean
   centered?: boolean
+  logoSize?: AppLogoSize
   className?: string
   titleClassName?: string
   taglineClassName?: string
@@ -16,6 +17,7 @@ export function AppBrand({
   variant = 'default',
   showTagline = false,
   centered = false,
+  logoSize = 'md',
   className,
   titleClassName,
   taglineClassName,
@@ -30,7 +32,7 @@ export function AppBrand({
         className,
       )}
     >
-      <AppLogo />
+      <AppLogo size={logoSize} className={cn(centered && 'object-center')} />
       <div className={cn('min-w-0', centered && 'space-y-1')}>
         <p
           className={cn(

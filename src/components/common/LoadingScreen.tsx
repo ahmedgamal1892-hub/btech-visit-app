@@ -9,7 +9,7 @@ type LoadingScreenProps = {
 export function LoadingScreen({ message = 'Loading...' }: LoadingScreenProps) {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background px-4">
-      <AppBrand centered showTagline />
+      <AppBrand centered showTagline logoSize="lg" />
       <div className="flex flex-col items-center gap-4">
         <div className="relative flex size-14 items-center justify-center">
           <span className="absolute inset-0 animate-ping rounded-full bg-primary/10" />

@@ -1,0 +1,23 @@
+{
+  "name": "BTECH Visit App",
+  "short_name": "BTECH Visit",
+  "description": "Store Visit Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F9FB",
+  "theme_color": "#FF6A00",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

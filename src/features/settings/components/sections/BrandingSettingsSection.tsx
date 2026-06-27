@@ -40,8 +40,8 @@ export function BrandingSettingsSection({
         icon={ImageIcon}
       >
         <div className="flex flex-col items-start gap-4 rounded-xl border border-dashed border-border bg-muted/20 p-5 sm:flex-row sm:items-center">
-          <div className="flex size-16 items-center justify-center rounded-xl border border-border bg-white p-2 shadow-sm">
-            <AppLogo />
+          <div className="flex size-20 items-center justify-center rounded-xl border border-border bg-white p-2 shadow-sm">
+            <AppLogo size="lg" />
           </div>
           <div className="min-w-0 flex-1 space-y-2">
             <p className="text-sm font-medium text-foreground">
@@ -125,7 +125,7 @@ export function BrandingSettingsSection({
         description="How branding appears in the shell."
       >
         <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-          <AppLogo />
+          <AppLogo size="md" />
           <div>
             <Label className="text-base">{general.applicationName}</Label>
             <p className="text-sm text-muted-foreground">{APP_TAGLINE}</p>

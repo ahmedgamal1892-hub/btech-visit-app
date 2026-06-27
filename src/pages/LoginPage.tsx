@@ -67,7 +67,7 @@ export function LoginPage() {
     <div className="flex min-h-svh items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md space-y-8">
         <div className="space-y-6 text-center">
-          <AppBrand centered showTagline />
+          <AppBrand centered showTagline logoSize="xl" />
           <div className="space-y-2">
             <h1 className="page-title">Welcome back</h1>
             <p className="page-description">

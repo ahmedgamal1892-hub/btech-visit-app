@@ -2,7 +2,15 @@ export const APP_NAME = 'BTECH Visit App'
 export const APP_TAGLINE = 'Store Visit Management System'
 export const LOGO_PATH = '/logo.png'
 export const LOGO_ALT = 'BTECH logo'
+export const LOGO_ASPECT_RATIO = 1
 export const LOGO_SIZE_PX = 40
+
+export const LOGO_DISPLAY_SIZES = {
+  sm: { height: 28, maxWidth: 112 },
+  md: { height: 40, maxWidth: 160 },
+  lg: { height: 56, maxWidth: 224 },
+  xl: { height: 72, maxWidth: 288 },
+} as const
 
 export const BRAND_COLORS = {
   primary: '#FF6A00',

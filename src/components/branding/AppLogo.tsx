@@ -1,11 +1,11 @@
-import { LOGO_ALT, LOGO_PATH, LOGO_SIZE_PX } from '@/lib/constants/branding'
+import {
+  LOGO_ALT,
+  LOGO_DISPLAY_SIZES,
+  LOGO_PATH,
+} from '@/lib/constants/branding'
 import { cn } from '@/lib/utils'
 
-export type AppLogoSize = 'md'
-
-const sizePx: Record<AppLogoSize, number> = {
-  md: LOGO_SIZE_PX,
-}
+export type AppLogoSize = keyof typeof LOGO_DISPLAY_SIZES
 
 type AppLogoProps = {
   size?: AppLogoSize
@@ -13,18 +13,24 @@ type AppLogoProps = {
 }
 
 export function AppLogo({ size = 'md', className }: AppLogoProps) {
-  const dimension = sizePx[size]
+  const { height, maxWidth } = LOGO_DISPLAY_SIZES[size]
 
   return (
     <img
       src={LOGO_PATH}
       alt={LOGO_ALT}
-      width={dimension}
-      height={dimension}
+      width={height}
+      height={height}
       className={cn(
-        'shrink-0 object-contain transition-transform duration-200',
+        'shrink-0 object-contain object-left transition-transform duration-200',
         className,
       )}
+      style={{
+        height,
+        maxHeight: height,
+        maxWidth,
+        width: 'auto',
+      }}
       draggable={false}
     />
   )

@@ -43,7 +43,11 @@ import {
   type PdfCursor,
 } from './pdf-layout-theme'
 import { registerPdfFonts } from './pdf-fonts'
-import { loadPdfLogoDataUrl } from './pdf-logo'
+import {
+  loadPdfLogoDataUrl,
+  loadPdfLogoDimensions,
+  getPdfLogoRenderSize,
+} from './pdf-logo'
 import { prepareVisitPhotoForPdf } from './pdf-photo-presentation'
 
 const PHOTO_COLUMNS = 3
@@ -103,26 +107,28 @@ function drawHeader(
   details: VisitDetails,
   cursor: PdfCursor,
   logoDataUrl: string,
+  logoWidth: number,
+  logoHeight: number,
 ) {
   const referenceDate = getReportReferenceDate(details)
-  const logoSize = 20
+  const textOffset = logoWidth + 6
 
-  doc.addImage(logoDataUrl, 'PNG', MARGIN, cursor.y - 2, logoSize, logoSize)
+  doc.addImage(logoDataUrl, 'PNG', MARGIN, cursor.y - 2, logoWidth, logoHeight)
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(15)
   doc.setTextColor(...COLORS.textPrimary)
-  doc.text(PDF_BRANDING.appName, MARGIN + logoSize + 6, cursor.y + 4)
+  doc.text(PDF_BRANDING.appName, MARGIN + textOffset, cursor.y + 4)
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text(PDF_BRANDING.tagline, MARGIN + logoSize + 6, cursor.y + 11)
+  doc.text(PDF_BRANDING.tagline, MARGIN + textOffset, cursor.y + 11)
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(11)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text('Visit Report', MARGIN + logoSize + 6, cursor.y + 17)
+  doc.text('Visit Report', MARGIN + textOffset, cursor.y + 17)
 
   const rightX = PAGE_WIDTH - MARGIN
   doc.setFont('helvetica', 'bold')
@@ -617,10 +623,17 @@ export async function generateVisitPdf(details: VisitDetails): Promise<Blob> {
   doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F')
 
   const logoDataUrl = await loadPdfLogoDataUrl()
+  const logoDimensions = await loadPdfLogoDimensions()
+  const { width: logoWidth, height: logoHeight } = getPdfLogoRenderSize(
+    logoDimensions.width,
+    logoDimensions.height,
+    20,
+    36,
+  )
   const cursor: PdfCursor = { y: MARGIN }
   const generatedAt = formatPdfDateTime(new Date().toISOString())
 
-  drawHeader(doc, details, cursor, logoDataUrl)
+  drawHeader(doc, details, cursor, logoDataUrl, logoWidth, logoHeight)
   drawVisitInformation(doc, details, cursor)
   drawBranchPerformance(doc, details, cursor)
   drawInspectionItems(doc, details, cursor)

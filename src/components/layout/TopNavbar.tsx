@@ -33,7 +33,7 @@ export function TopNavbar({
             <Menu className="size-5" />
           </GhostButton>
         )}
-        <AppLogo className="hidden shrink-0 sm:block" />
+        <AppLogo size="sm" className="shrink-0" />
         <div className="min-w-0">
           <h1 className="truncate text-base font-bold text-foreground md:text-lg">
             {APP_NAME}

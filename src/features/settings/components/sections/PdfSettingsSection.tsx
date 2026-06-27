@@ -45,7 +45,7 @@ export function PdfSettingsSection({
         }
       >
         <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-muted/20 p-4">
-          <AppLogo />
+          <AppLogo size="md" />
           <div>
             <p className="text-sm font-medium">Company Logo</p>
             <p className="text-xs text-muted-foreground">{logoPath}</p>

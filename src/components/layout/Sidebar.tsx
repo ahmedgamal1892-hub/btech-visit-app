@@ -42,7 +42,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
       )}
     >
       <div className="px-5 py-6">
-        <AppBrand variant="on-dark" showTagline />
+        <AppBrand variant="on-dark" showTagline logoSize="md" />
       </div>
 
       <Separator className="bg-sidebar-border" />

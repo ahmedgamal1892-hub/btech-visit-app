@@ -29,7 +29,7 @@ export function EmptyState({
       )}
     >
       {useBrandLogo ? (
-        <AppLogo className="mb-2" />
+        <AppLogo className="mb-2" size="lg" />
       ) : Icon ? (
         <div className="flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon className="size-8" aria-hidden="true" />
