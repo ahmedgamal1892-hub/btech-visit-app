@@ -1,12 +1,14 @@
-import { ClipboardList, Loader2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ClipboardList } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
-import { PageHeader } from '@/components/common'
-import { Button } from '@/components/ui/button'
+import {
+  ErrorState,
+  PageHeader,
+  PageLoading,
+  TablePagination,
+} from '@/components/common'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast'
 import {
   AuditLogDetailsDialog,
@@ -21,30 +23,36 @@ import {
   useAuditLogs,
 } from '@/features/audit'
 import { fetchAuditLogs } from '@/services/audit'
-import { useAuth, useDebouncedValue } from '@/hooks'
+import { useAuth, useDebouncedValue, usePersistedState } from '@/hooks'
 import type {
   AuditLogEntry,
   AuditLogFilters as AuditLogFiltersState,
 } from '@/types/audit'
 
+const AUDIT_LOG_FILTERS_KEY = 'btech:audit-log:filters'
+const AUDIT_LOG_SEARCH_KEY = 'btech:audit-log:search'
+
 export function AuditLogPage() {
   const { toast } = useToast()
   const { isLoading: isAuthLoading, isAdmin } = useAuth()
-  const [filters, setFilters] = useState<Omit<AuditLogFiltersState, 'search'>>(
-    () => {
-      const defaults = createDefaultAuditLogFilters()
-      return {
-        actorUserId: defaults.actorUserId,
-        action: defaults.action,
-        entityType: defaults.entityType,
-        fromDate: defaults.fromDate,
-        toDate: defaults.toDate,
-        page: defaults.page,
-        pageSize: defaults.pageSize,
-      }
-    },
+  const [filters, setFilters] = usePersistedState<
+    Omit<AuditLogFiltersState, 'search'>
+  >(AUDIT_LOG_FILTERS_KEY, () => {
+    const defaults = createDefaultAuditLogFilters()
+    return {
+      actorUserId: defaults.actorUserId,
+      action: defaults.action,
+      entityType: defaults.entityType,
+      fromDate: defaults.fromDate,
+      toDate: defaults.toDate,
+      page: defaults.page,
+      pageSize: defaults.pageSize,
+    }
+  })
+  const [searchInput, setSearchInput] = usePersistedState(
+    AUDIT_LOG_SEARCH_KEY,
+    '',
   )
-  const [searchInput, setSearchInput] = useState('')
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
   const [isExporting, setIsExporting] = useState(false)
   const debouncedSearch = useDebouncedValue(searchInput, 300)
@@ -58,8 +66,22 @@ export function AuditLogPage() {
   )
 
   const { data: filterOptions } = useAuditLogFilterOptions()
-  const { data, isLoading, isFetching, isError, error } =
+  const { data, isLoading, isFetching, isError, error, refetch } =
     useAuditLogs(queryFilters)
+
+  const handleReset = useCallback(() => {
+    const defaults = createDefaultAuditLogFilters()
+    setSearchInput('')
+    setFilters({
+      actorUserId: defaults.actorUserId,
+      action: defaults.action,
+      entityType: defaults.entityType,
+      fromDate: defaults.fromDate,
+      toDate: defaults.toDate,
+      page: defaults.page,
+      pageSize: defaults.pageSize,
+    })
+  }, [setFilters, setSearchInput])
 
   const paginationLabel = useMemo(() => {
     if (!data || data.totalCount === 0) {
@@ -72,12 +94,7 @@ export function AuditLogPage() {
   }, [data])
 
   if (isAuthLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Loading audit log...
-      </div>
-    )
+    return <PageLoading message="Loading audit log..." />
   }
 
   if (!isAdmin) {
@@ -139,7 +156,7 @@ export function AuditLogPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <PageHeader
         title="Audit Log"
         description="Review application activity across users, visits, imports, and settings."
@@ -152,114 +169,75 @@ export function AuditLogPage() {
         }
       />
 
-      <Card className="rounded-2xl border-border/70 shadow-sm">
+      <AuditLogFilters
+        filters={{
+          ...filters,
+          search: searchInput,
+        }}
+        options={filterOptions}
+        onReset={handleReset}
+        onRefresh={() => void refetch()}
+        isRefreshing={isFetching}
+        onChange={(nextFilters) => {
+          setSearchInput(nextFilters.search)
+          setFilters({
+            actorUserId: nextFilters.actorUserId,
+            action: nextFilters.action,
+            entityType: nextFilters.entityType,
+            fromDate: nextFilters.fromDate,
+            toDate: nextFilters.toDate,
+            page: 1,
+            pageSize: nextFilters.pageSize,
+          })
+        }}
+      />
+
+      <Card>
         <CardHeader>
           <CardTitle>Activity History</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <AuditLogFilters
-            filters={{
-              ...filters,
-              search: searchInput,
-            }}
-            options={filterOptions}
-            onChange={(nextFilters) => {
-              setSearchInput(nextFilters.search)
-              setFilters({
-                actorUserId: nextFilters.actorUserId,
-                action: nextFilters.action,
-                entityType: nextFilters.entityType,
-                fromDate: nextFilters.fromDate,
-                toDate: nextFilters.toDate,
-                page: 1,
-                pageSize: nextFilters.pageSize,
-              })
-            }}
-          />
+          {isError ? (
+            <ErrorState
+              title="Unable to load audit logs"
+              message={
+                error instanceof Error
+                  ? error.message
+                  : 'Please try again in a moment.'
+              }
+              onRetry={() => void refetch()}
+              isRetrying={isFetching}
+            />
+          ) : null}
 
-          {isError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-            >
-              {error instanceof Error
-                ? error.message
-                : 'Unable to load audit logs.'}
-            </div>
-          )}
+          {!isError && showSkeleton ? <AuditLogTableSkeleton /> : null}
 
-          {!isError && showSkeleton && <AuditLogTableSkeleton />}
-
-          {!isError && !showSkeleton && data && (
+          {!isError && !showSkeleton && data ? (
             <>
-              <AuditLogTable rows={data.rows} onSelect={setSelectedEntry} />
+              <AuditLogTable
+                rows={data.rows}
+                searchQuery={debouncedSearch}
+                onSelect={setSelectedEntry}
+              />
 
-              <div className="flex flex-col gap-4 border-t border-border/70 pt-4 lg:flex-row lg:items-center lg:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {paginationLabel}
-                </p>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="audit-log-page-size" className="sr-only">
-                      Rows per page
-                    </Label>
-                    <Select
-                      id="audit-log-page-size"
-                      value={String(filters.pageSize)}
-                      onChange={(event) =>
-                        setFilters((current) => ({
-                          ...current,
-                          pageSize: Number(event.target.value),
-                          page: 1,
-                        }))
-                      }
-                    >
-                      {AUDIT_LOG_PAGE_SIZE_OPTIONS.map((size) => (
-                        <option key={size} value={size}>
-                          {size} rows
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={filters.page <= 1}
-                      onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          page: current.page - 1,
-                        }))
-                      }
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {data.page} of {data.totalPages}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={filters.page >= data.totalPages}
-                      onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          page: current.page + 1,
-                        }))
-                      }
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              {data.totalCount > 0 ? (
+                <TablePagination
+                  label={paginationLabel}
+                  page={data.page}
+                  totalPages={data.totalPages}
+                  pageSize={filters.pageSize}
+                  pageSizeOptions={AUDIT_LOG_PAGE_SIZE_OPTIONS}
+                  pageSizeId="audit-log-page-size"
+                  onPageChange={(page) =>
+                    setFilters((current) => ({ ...current, page }))
+                  }
+                  onPageSizeChange={(pageSize) =>
+                    setFilters((current) => ({ ...current, pageSize, page: 1 }))
+                  }
+                />
+              ) : null}
             </>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

@@ -1,73 +1,246 @@
-import { ClipboardList, Package, Store, Upload, Layers } from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
+import { lazy, Suspense, useCallback } from 'react'
 
+import { ErrorState, PageHeader } from '@/components/common'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
-  AlertBanner,
-  PageHeader,
-  StatCard,
-  StatCardGridSkeleton,
-} from '@/components/common'
-import { useDashboardStats } from '@/features/daily-upload/hooks'
+  DashboardFiltersBar,
+  DashboardLazySection,
+  DashboardQuickActions,
+  DashboardTablesSkeleton,
+  ExecutiveKpiGrid,
+  ExecutiveKpiGridSkeleton,
+  ExecutiveSummaryCard,
+  DashboardInsightsSkeleton,
+  MyPerformanceSection,
+  TopBranchesTable,
+  TopVisitorsTable,
+  createDefaultExecutiveDashboardFilters,
+  exportExecutiveDashboardExcel,
+  exportExecutiveDashboardPdf,
+  useExecutiveDashboard,
+} from '@/features/dashboard'
+import { useAuth, usePersistedState } from '@/hooks'
+
+const DASHBOARD_FILTERS_KEY = 'btech:dashboard:filters'
+
+const DashboardChartsSection = lazy(async () => {
+  const module =
+    await import('@/features/dashboard/components/DashboardChartsSection')
+  return { default: module.DashboardChartsSection }
+})
+
+const VisitorLeaderboard = lazy(async () => {
+  const module =
+    await import('@/features/dashboard/components/VisitorLeaderboard')
+  return { default: module.VisitorLeaderboard }
+})
+
+const RecentActivityTimeline = lazy(async () => {
+  const module =
+    await import('@/features/dashboard/components/RecentActivityTimeline')
+  return { default: module.RecentActivityTimeline }
+})
+
+const ManagementInsightsPanel = lazy(async () => {
+  const module =
+    await import('@/features/dashboard/components/ManagementInsightsPanel')
+  return { default: module.ManagementInsightsPanel }
+})
 
 export function DashboardPage() {
-  const { data, isLoading, isError } = useDashboardStats()
+  const { user } = useAuth()
+  const [filters, setFilters] = usePersistedState(
+    DASHBOARD_FILTERS_KEY,
+    createDefaultExecutiveDashboardFilters(),
+  )
+  const {
+    data,
+    summary,
+    kpis,
+    personalPerformance,
+    charts,
+    tables,
+    insights,
+    filterOptions,
+    isLoading,
+    isFetching,
+    isError,
+    lastUpdatedAt,
+    refetch,
+  } = useExecutiveDashboard(filters, user?.id)
+
+  const handleReset = useCallback(() => {
+    setFilters(createDefaultExecutiveDashboardFilters())
+  }, [setFilters])
+
+  const handleRefresh = useCallback(() => {
+    void refetch()
+  }, [refetch])
+
+  const handleExportPdf = useCallback(() => {
+    if (!data) {
+      return
+    }
+
+    exportExecutiveDashboardPdf(data, filters)
+  }, [data, filters])
+
+  const handleExportExcel = useCallback(() => {
+    if (!data) {
+      return
+    }
+
+    exportExecutiveDashboardExcel(data, filters)
+  }, [data, filters])
+
+  const showInitialSkeleton = isLoading && !data
+  const sectionLoading = isFetching && !data
 
   return (
-    <div className="space-y-8">
+    <div className="page-stack">
       <PageHeader
-        title="Dashboard"
-        description="Overview of your visit management workspace."
+        title="Executive Dashboard"
+        description="Management overview for regional performance, visit activity, and operational coverage."
+        icon={LayoutDashboard}
       />
 
-      {isError && (
-        <AlertBanner
-          variant="error"
-          title="Unable to load dashboard statistics"
-        >
-          Please refresh the page or try again in a moment.
-        </AlertBanner>
+      <DashboardFiltersBar
+        filters={filters}
+        options={filterOptions}
+        onChange={setFilters}
+        onReset={handleReset}
+        onRefresh={handleRefresh}
+        onExportPdf={handleExportPdf}
+        onExportExcel={handleExportExcel}
+        isRefreshing={isFetching}
+        canExport={Boolean(data)}
+      />
+
+      {isError ? (
+        <ErrorState
+          title="Unable to load dashboard data"
+          message="Please try again in a moment."
+          onRetry={handleRefresh}
+          isRetrying={isFetching}
+        />
+      ) : null}
+
+      {showInitialSkeleton ? (
+        <ExecutiveSummaryCard isLoading />
+      ) : (
+        <ExecutiveSummaryCard summary={summary} />
       )}
 
-      {isLoading && !data ? (
-        <StatCardGridSkeleton />
+      {showInitialSkeleton ? (
+        <ExecutiveKpiGridSkeleton count={10} />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
-          <StatCard
-            title="Current Snapshot"
-            description="Date of the active operational snapshot."
-            icon={Layers}
-            value={data?.currentSnapshotLabel}
-            isLoading={isLoading}
+        <ExecutiveKpiGrid
+          kpis={kpis}
+          lastUpdatedAt={lastUpdatedAt}
+          isLoading={sectionLoading}
+        />
+      )}
+
+      {showInitialSkeleton ? (
+        <MyPerformanceSection isLoading />
+      ) : (
+        <MyPerformanceSection performance={personalPerformance} />
+      )}
+
+      <DashboardLazySection
+        title="Management Insights"
+        description="Automatically generated leadership highlights."
+        fallbackHeightClass="h-80"
+      >
+        {showInitialSkeleton ? (
+          <DashboardInsightsSkeleton />
+        ) : (
+          <Suspense fallback={<DashboardInsightsSkeleton />}>
+            <ManagementInsightsPanel insights={insights} />
+          </Suspense>
+        )}
+      </DashboardLazySection>
+
+      <DashboardLazySection
+        title="Analytics"
+        description="Visit trends, branch performance, and upload activity."
+        fallbackHeightClass="h-[720px]"
+      >
+        {showInitialSkeleton ? (
+          <Skeleton className="h-[720px] w-full rounded-xl" />
+        ) : (
+          <Suspense
+            fallback={<Skeleton className="h-[720px] w-full rounded-xl" />}
+          >
+            <DashboardChartsSection
+              charts={charts}
+              isLoading={sectionLoading}
+            />
+          </Suspense>
+        )}
+      </DashboardLazySection>
+
+      <DashboardLazySection
+        title="Leaderboard"
+        description="Top performers across visits, coverage, and field activity."
+        fallbackHeightClass="h-96"
+      >
+        {showInitialSkeleton ? (
+          <Skeleton className="h-96 w-full rounded-xl" />
+        ) : (
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+            <VisitorLeaderboard
+              rows={tables?.leaderboard}
+              isLoading={sectionLoading}
+            />
+          </Suspense>
+        )}
+      </DashboardLazySection>
+
+      {showInitialSkeleton ? (
+        <DashboardTablesSkeleton />
+      ) : (
+        <div className="grid gap-5 xl:grid-cols-2">
+          <TopVisitorsTable
+            rows={tables?.topVisitors ?? []}
+            isLoading={sectionLoading}
           />
-          <StatCard
-            title="Total Stores"
-            description="Store count from the current snapshot."
-            icon={Store}
-            value={data?.totalStores}
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Total Products"
-            description="Distinct product count from the current snapshot."
-            icon={Package}
-            value={data?.totalProducts}
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Last Upload"
-            description="Most recent confirmed Excel upload."
-            icon={Upload}
-            value={data?.lastUploadLabel}
-            isLoading={isLoading}
-          />
-          <StatCard
-            title="Visits"
-            description="Submitted visit activity summary."
-            icon={ClipboardList}
-            value={data?.visitsCount}
-            isLoading={isLoading}
+          <TopBranchesTable
+            rows={tables?.mostVisitedBranches ?? []}
+            isLoading={sectionLoading}
           />
         </div>
       )}
+
+      <DashboardLazySection
+        title="Recent Activity"
+        description="Latest submitted visits across the organization."
+        fallbackHeightClass="h-96"
+      >
+        {showInitialSkeleton ? (
+          <Skeleton className="h-96 w-full rounded-xl" />
+        ) : (
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+            <RecentActivityTimeline
+              rows={tables?.recentActivity}
+              isLoading={sectionLoading}
+            />
+          </Suspense>
+        )}
+      </DashboardLazySection>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Quick Actions
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Jump to common management workflows.
+          </p>
+        </div>
+        <DashboardQuickActions />
+      </section>
     </div>
   )
 }

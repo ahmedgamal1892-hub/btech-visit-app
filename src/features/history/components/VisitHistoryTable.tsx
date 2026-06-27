@@ -16,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { highlightMatch } from '@/lib/utils/highlight-text'
+
 import { VisitStatusBadge } from '@/features/history/components/VisitStatusBadge'
 import type {
   VisitHistoryRow,
@@ -27,6 +29,7 @@ type VisitHistoryTableProps = {
   rows: VisitHistoryRow[]
   sortBy: VisitHistorySortBy
   sortDir: VisitHistorySortDir
+  searchQuery?: string
   onSort: (sortBy: VisitHistorySortBy) => void
   canDeleteVisit: (row: VisitHistoryRow) => boolean
   onDelete: (row: VisitHistoryRow) => void
@@ -83,21 +86,27 @@ function VisitHistoryCard({
   onView,
   canDelete,
   onDelete,
+  searchQuery = '',
 }: {
   row: VisitHistoryRow
   onView: (row: VisitHistoryRow) => void
   canDelete: boolean
   onDelete: (row: VisitHistoryRow) => void
+  searchQuery?: string
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 p-4">
+    <div className="surface-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">
-            {formatVisitNumber(row.visitNumber)}
+            {highlightMatch(formatVisitNumber(row.visitNumber), searchQuery)}
           </p>
-          <p className="mt-1 font-medium text-foreground">{row.branchName}</p>
-          <p className="text-sm text-muted-foreground">{row.visitorName}</p>
+          <p className="mt-1 font-medium text-foreground">
+            {highlightMatch(row.branchName, searchQuery)}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {highlightMatch(row.visitorName, searchQuery)}
+          </p>
         </div>
         <VisitStatusBadge
           status={row.status}
@@ -144,10 +153,7 @@ export function VisitHistoryTableSkeleton() {
     <>
       <div className="grid gap-4 md:hidden">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="rounded-2xl border border-border/70 p-4 space-y-3"
-          >
+          <div key={index} className="surface-card space-y-3 p-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-4 w-32" />
@@ -192,6 +198,7 @@ export function VisitHistoryTable({
   rows,
   sortBy,
   sortDir,
+  searchQuery = '',
   onSort,
   canDeleteVisit,
   onDelete,
@@ -232,6 +239,7 @@ export function VisitHistoryTable({
             onView={handleView}
             canDelete={canDeleteVisit(row)}
             onDelete={onDelete}
+            searchQuery={searchQuery}
           />
         ))}
       </div>
@@ -278,11 +286,18 @@ export function VisitHistoryTable({
             {rows.map((row) => (
               <TableRow key={row.visitId}>
                 <TableCell className="font-medium">
-                  {formatVisitNumber(row.visitNumber)}
+                  {highlightMatch(
+                    formatVisitNumber(row.visitNumber),
+                    searchQuery,
+                  )}
                 </TableCell>
                 <TableCell>{formatVisitDate(row.visitDate)}</TableCell>
-                <TableCell>{row.branchName}</TableCell>
-                <TableCell>{row.visitorName}</TableCell>
+                <TableCell>
+                  {highlightMatch(row.branchName, searchQuery)}
+                </TableCell>
+                <TableCell>
+                  {highlightMatch(row.visitorName, searchQuery)}
+                </TableCell>
                 <TableCell>{row.inspectionItemsCount}</TableCell>
                 <TableCell>{row.photosCount}</TableCell>
                 <TableCell>

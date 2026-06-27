@@ -1,10 +1,14 @@
-import { Loader2, Plus, Users } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Plus, Users } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
-import { AlertBanner, PageHeader } from '@/components/common'
+import {
+  ErrorState,
+  PageHeader,
+  PageLoading,
+  TablePagination,
+} from '@/components/common'
 import { PrimaryButton } from '@/components/ui/action-buttons'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import {
@@ -33,7 +37,7 @@ import {
   canDeleteUser,
   validateSelfProfileEdit,
 } from '@/features/users/utils/self-guards'
-import { useAuth, useDebouncedValue } from '@/hooks'
+import { useAuth, useDebouncedValue, usePersistedState } from '@/hooks'
 import type {
   CreateUserFormValues,
   ResetPasswordFormValues,
@@ -43,10 +47,14 @@ import type { EnterpriseUserRow } from '@/features/users/types/user-directory.ty
 import type { UserDirectoryFilters } from '@/features/users/types/user-directory.types'
 import type { UserProfile } from '@/types/user'
 
+const USER_DIRECTORY_FILTERS_KEY = 'btech:users:filters'
+const USER_PAGE_SIZE_OPTIONS = [10, 25, 50] as const
+
 export function UsersPage() {
   const { user, isLoading: isAuthLoading, isAdmin, refreshProfile } = useAuth()
   const { toast } = useToast()
-  const [filters, setFilters] = useState<UserDirectoryFilters>(() =>
+  const [filters, setFilters] = usePersistedState<UserDirectoryFilters>(
+    USER_DIRECTORY_FILTERS_KEY,
     createDefaultUserDirectoryFilters(),
   )
   const debouncedNameSearch = useDebouncedValue(filters.nameSearch, 300)
@@ -62,7 +70,8 @@ export function UsersPage() {
   )
 
   const { data: stats, isLoading: isStatsLoading } = useUserDirectoryStats()
-  const { data, isLoading, isError, error } = useUserDirectory(queryFilters)
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useUserDirectory(queryFilters)
   const createUserMutation = useCreateUser()
   const updateUserMutation = useUpdateUser()
   const resetPasswordMutation = useResetUserPassword()
@@ -90,13 +99,12 @@ export function UsersPage() {
     return `${start}-${end} of ${data.totalCount} users`
   }, [data])
 
+  const handleResetFilters = useCallback(() => {
+    setFilters(createDefaultUserDirectoryFilters())
+  }, [setFilters])
+
   if (isAuthLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Loading users...
-      </div>
-    )
+    return <PageLoading message="Loading users..." />
   }
 
   if (!isAdmin) {
@@ -350,7 +358,7 @@ export function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <PageHeader
         title="User Management"
         description="Manage application users, roles, access, and activity."
@@ -367,19 +375,30 @@ export function UsersPage() {
 
       <UserStatsCards stats={stats} isLoading={isStatsLoading} />
 
-      <Card className="rounded-2xl border-border/70 shadow-sm">
+      <UserManagementFilters
+        filters={filters}
+        onChange={setFilters}
+        onReset={handleResetFilters}
+        onRefresh={() => refetch()}
+        isRefreshing={isFetching}
+      />
+
+      <Card>
         <CardHeader>
           <CardTitle>User Directory</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <UserManagementFilters filters={filters} onChange={setFilters} />
-
           {isLoading ? <UserTableSkeleton /> : null}
 
           {isError ? (
-            <AlertBanner variant="error" title="Unable to load users">
-              {error instanceof Error ? error.message : 'Please try again.'}
-            </AlertBanner>
+            <ErrorState
+              title="Unable to load users"
+              message={
+                error instanceof Error ? error.message : 'Please try again.'
+              }
+              onRetry={() => refetch()}
+              isRetrying={isFetching}
+            />
           ) : null}
 
           {!isLoading && !isError && data ? (
@@ -387,6 +406,8 @@ export function UsersPage() {
               <EnterpriseUserTable
                 users={data.users}
                 currentUserId={user?.id}
+                nameSearch={debouncedNameSearch}
+                usernameSearch={debouncedUsernameSearch}
                 onSelectUser={setSelectedUser}
                 onEdit={openEditUser}
                 onResetPassword={openResetPassword}
@@ -397,46 +418,20 @@ export function UsersPage() {
               />
 
               {data.totalCount > 0 ? (
-                <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {paginationLabel}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full"
-                      disabled={filters.page <= 1}
-                      onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          page: current.page - 1,
-                        }))
-                      }
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {data.page} of {data.totalPages}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full"
-                      disabled={filters.page >= data.totalPages}
-                      onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          page: current.page + 1,
-                        }))
-                      }
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
+                <TablePagination
+                  label={paginationLabel}
+                  page={data.page}
+                  totalPages={data.totalPages}
+                  pageSize={filters.pageSize}
+                  pageSizeOptions={USER_PAGE_SIZE_OPTIONS}
+                  pageSizeId="users-page-size"
+                  onPageChange={(page) =>
+                    setFilters((current) => ({ ...current, page }))
+                  }
+                  onPageSizeChange={(pageSize) =>
+                    setFilters((current) => ({ ...current, pageSize, page: 1 }))
+                  }
+                />
               ) : null}
             </>
           ) : null}

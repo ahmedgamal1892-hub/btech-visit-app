@@ -24,11 +24,14 @@ import {
   formatUserDateTime,
 } from '@/features/users/utils/user-directory'
 import { getUserDisplayName } from '@/lib/utils/user-display'
+import { highlightMatch } from '@/lib/utils/highlight-text'
 import { cn } from '@/lib/utils'
 
 type EnterpriseUserTableProps = {
   users: EnterpriseUserRow[]
   currentUserId?: string
+  nameSearch?: string
+  usernameSearch?: string
   onSelectUser: (user: EnterpriseUserRow) => void
   onEdit: (user: EnterpriseUserRow) => void
   onResetPassword: (user: EnterpriseUserRow) => void
@@ -139,6 +142,8 @@ function UserMobileCard({
   onDeactivate,
   onDelete,
   togglingUserId,
+  nameSearch = '',
+  usernameSearch = '',
 }: {
   user: EnterpriseUserRow
   currentUserId?: string
@@ -149,6 +154,8 @@ function UserMobileCard({
   onDeactivate: (user: EnterpriseUserRow) => void
   onDelete: (user: EnterpriseUserRow) => void
   togglingUserId?: string | null
+  nameSearch?: string
+  usernameSearch?: string
 }) {
   const displayName = getUserDisplayName(user.full_name, user.username)
 
@@ -156,7 +163,7 @@ function UserMobileCard({
     <button
       type="button"
       onClick={() => onSelectUser(user)}
-      className="w-full rounded-2xl border border-border/70 bg-card p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md"
+      className="surface-card w-full p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="flex items-start gap-3">
         <UserAvatar fullName={user.full_name} username={user.username} />
@@ -164,10 +171,10 @@ function UserMobileCard({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate font-medium text-foreground">
-                {displayName}
+                {highlightMatch(displayName, nameSearch)}
               </p>
               <p className="truncate text-sm text-muted-foreground">
-                @{user.username}
+                @{highlightMatch(user.username, usernameSearch)}
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
@@ -241,6 +248,8 @@ function UserMobileCard({
 export function EnterpriseUserTable({
   users,
   currentUserId,
+  nameSearch = '',
+  usernameSearch = '',
   onSelectUser,
   onEdit,
   onResetPassword,
@@ -274,6 +283,8 @@ export function EnterpriseUserTable({
             onDeactivate={onDeactivate}
             onDelete={onDelete}
             togglingUserId={togglingUserId}
+            nameSearch={nameSearch}
+            usernameSearch={usernameSearch}
           />
         ))}
       </div>
@@ -316,8 +327,12 @@ export function EnterpriseUserTable({
                       className="size-9"
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{displayName}</TableCell>
-                  <TableCell>@{user.username}</TableCell>
+                  <TableCell className="font-medium">
+                    {highlightMatch(displayName, nameSearch)}
+                  </TableCell>
+                  <TableCell>
+                    @{highlightMatch(user.username, usernameSearch)}
+                  </TableCell>
                   <TableCell>
                     <RoleBadge role={user.role} />
                   </TableCell>

@@ -1,6 +1,6 @@
-import { ArrowDownUp, Search } from 'lucide-react'
+import { ArrowDownUp } from 'lucide-react'
 
-import { Input } from '@/components/ui/input'
+import { PageFiltersBar, SearchInput } from '@/components/common'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import type { UserDirectoryFilters } from '@/features/users/types/user-directory.types'
@@ -8,11 +8,17 @@ import type { UserDirectoryFilters } from '@/features/users/types/user-directory
 type UserManagementFiltersProps = {
   filters: UserDirectoryFilters
   onChange: (filters: UserDirectoryFilters) => void
+  onReset?: () => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 export function UserManagementFilters({
   filters,
   onChange,
+  onReset,
+  onRefresh,
+  isRefreshing,
 }: UserManagementFiltersProps) {
   const updateFilters = (patch: Partial<UserDirectoryFilters>) => {
     onChange({
@@ -23,38 +29,36 @@ export function UserManagementFilters({
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4 md:p-5">
+    <PageFiltersBar
+      title="User Filters"
+      description="Search, filter, and sort the user directory."
+      onReset={onReset}
+      onRefresh={onRefresh}
+      isRefreshing={isRefreshing}
+    >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="user-name-search">Search by name</Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="user-name-search"
-              value={filters.nameSearch}
-              onChange={(event) =>
-                updateFilters({ nameSearch: event.target.value })
-              }
-              placeholder="Full name"
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            id="user-name-search"
+            value={filters.nameSearch}
+            onChange={(event) =>
+              updateFilters({ nameSearch: event.target.value })
+            }
+            placeholder="Full name"
+          />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="user-username-search">Search by username</Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="user-username-search"
-              value={filters.usernameSearch}
-              onChange={(event) =>
-                updateFilters({ usernameSearch: event.target.value })
-              }
-              placeholder="Username"
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            id="user-username-search"
+            value={filters.usernameSearch}
+            onChange={(event) =>
+              updateFilters({ usernameSearch: event.target.value })
+            }
+            placeholder="Username"
+          />
         </div>
 
         <div className="space-y-2">
@@ -93,11 +97,14 @@ export function UserManagementFilters({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="user-sort-by">Sort by</Label>
           <div className="relative">
-            <ArrowDownUp className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <ArrowDownUp
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Select
               id="user-sort-by"
               value={filters.sortBy}
@@ -132,6 +139,6 @@ export function UserManagementFilters({
           </Select>
         </div>
       </div>
-    </div>
+    </PageFiltersBar>
   )
 }

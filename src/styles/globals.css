@@ -111,6 +111,65 @@
   }
 
   .surface-card {
-    @apply rounded-xl border border-border bg-card shadow-md;
+    @apply rounded-xl border border-border bg-card shadow-md transition-shadow duration-300;
+  }
+
+  .filter-bar {
+    @apply rounded-xl border border-border bg-card p-4 shadow-md md:p-5;
+  }
+
+  .page-stack {
+    @apply space-y-6;
+  }
+
+  .interactive-row {
+    @apply transition-colors duration-200 hover:bg-primary/5;
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes dashboard-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes dashboard-column-grow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes dashboard-donut-grow {
+  from {
+    opacity: 0.4;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

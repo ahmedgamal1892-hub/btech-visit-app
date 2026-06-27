@@ -2,7 +2,7 @@ import { Loader2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
-import { PageHeader } from '@/components/common'
+import { AlertBanner, PageHeader, PageLoading } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/components/ui/toast'
@@ -68,12 +68,7 @@ export function DailyUploadPage() {
   const isUploading = confirmImportMutation.isPending
 
   if (isAuthLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Loading daily upload...
-      </div>
-    )
+    return <PageLoading message="Loading daily upload..." />
   }
 
   if (!isAdmin) {
@@ -237,7 +232,7 @@ export function DailyUploadPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <PageHeader
         title="Daily Upload"
         description="Upload the Display and Sales Achievement Excel files to replace the current operational snapshot."
@@ -276,19 +271,16 @@ export function DailyUploadPage() {
       <ImportPreviewPanel preview={validation.preview} />
 
       {validation.errors.some((error) => error.sheet === 'general') && (
-        <div
-          role="alert"
-          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
-        >
+        <AlertBanner variant="warning" title="Validation issues">
           {validation.errors
             .filter((error) => error.sheet === 'general')
             .map((error) => error.message)
             .join(' ')}
-        </div>
+        </AlertBanner>
       )}
 
       {isUploading && (
-        <div className="space-y-2 rounded-2xl border border-border/70 bg-background p-4">
+        <div className="surface-card space-y-2 p-4">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-foreground">
               {uploadMessage || 'Uploading...'}

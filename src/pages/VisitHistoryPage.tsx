@@ -1,11 +1,13 @@
-import { History, Loader2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { History } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
 
-import { PageHeader } from '@/components/common'
-import { Button } from '@/components/ui/button'
+import {
+  ErrorState,
+  PageHeader,
+  PageLoading,
+  TablePagination,
+} from '@/components/common'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast'
 import {
   DeleteVisitDialog,
@@ -20,12 +22,15 @@ import {
 } from '@/features/history'
 import { useDeleteVisit } from '@/features/history/hooks/use-delete-visit'
 import { useBranches } from '@/features/visits'
-import { useAuth, useDebouncedValue } from '@/hooks'
+import { useAuth, useDebouncedValue, usePersistedState } from '@/hooks'
 import type {
   VisitHistoryFilters as VisitHistoryFiltersState,
   VisitHistoryRow,
   VisitHistorySortBy,
 } from '@/types/visit-history'
+
+const VISIT_HISTORY_FILTERS_KEY = 'btech:visit-history:filters'
+const VISIT_HISTORY_SEARCH_KEY = 'btech:visit-history:search'
 
 export function VisitHistoryPage() {
   const { toast } = useToast()
@@ -35,9 +40,9 @@ export function VisitHistoryPage() {
     null,
   )
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [filters, setFilters] = useState<
+  const [filters, setFilters] = usePersistedState<
     Omit<VisitHistoryFiltersState, 'search'>
-  >(() => {
+  >(VISIT_HISTORY_FILTERS_KEY, () => {
     const defaults = createDefaultVisitHistoryFilters()
     return {
       branchId: defaults.branchId,
@@ -51,7 +56,10 @@ export function VisitHistoryPage() {
       pageSize: defaults.pageSize,
     }
   })
-  const [searchInput, setSearchInput] = useState('')
+  const [searchInput, setSearchInput] = usePersistedState(
+    VISIT_HISTORY_SEARCH_KEY,
+    '',
+  )
   const debouncedSearch = useDebouncedValue(searchInput, 300)
 
   const queryFilters = useMemo<VisitHistoryFiltersState>(
@@ -65,8 +73,24 @@ export function VisitHistoryPage() {
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches()
   const { data: visitors = [], isLoading: isVisitorsLoading } =
     useVisitHistoryVisitors(isAdmin)
-  const { data, isLoading, isFetching, isError, error } =
+  const { data, isLoading, isFetching, isError, error, refetch } =
     useVisitsHistory(queryFilters)
+
+  const handleReset = useCallback(() => {
+    const defaults = createDefaultVisitHistoryFilters()
+    setSearchInput('')
+    setFilters({
+      branchId: defaults.branchId,
+      visitorId: defaults.visitorId,
+      status: defaults.status,
+      fromDate: defaults.fromDate,
+      toDate: defaults.toDate,
+      sortBy: defaults.sortBy,
+      sortDir: defaults.sortDir,
+      page: defaults.page,
+      pageSize: defaults.pageSize,
+    })
+  }, [setFilters, setSearchInput])
 
   const paginationLabel = useMemo(() => {
     if (!data || data.totalCount === 0) {
@@ -140,147 +164,97 @@ export function VisitHistoryPage() {
   }
 
   if (isAuthLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Loading visit history...
-      </div>
-    )
+    return <PageLoading message="Loading visit history..." />
   }
 
   const isInitialLoading = isLoading || isBranchesLoading || isVisitorsLoading
   const showSkeleton = isInitialLoading || (isFetching && !data)
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <PageHeader
         title="Visit History"
         description="Browse submitted visits, filter by branch or visitor, and open visit details."
         icon={History}
       />
 
-      <Card className="rounded-2xl border-border/70 shadow-sm">
+      <VisitHistoryFilters
+        filters={{
+          ...filters,
+          search: searchInput,
+        }}
+        branches={branches}
+        visitors={visitors}
+        showVisitorFilter={isAdmin}
+        onReset={handleReset}
+        onRefresh={() => void refetch()}
+        isRefreshing={isFetching}
+        onChange={(nextFilters) => {
+          setSearchInput(nextFilters.search)
+          setFilters({
+            branchId: nextFilters.branchId,
+            visitorId: nextFilters.visitorId,
+            status: nextFilters.status,
+            fromDate: nextFilters.fromDate,
+            toDate: nextFilters.toDate,
+            sortBy: nextFilters.sortBy,
+            sortDir: nextFilters.sortDir,
+            page: 1,
+            pageSize: nextFilters.pageSize,
+          })
+        }}
+      />
+
+      <Card>
         <CardHeader>
           <CardTitle>Submitted Visits</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <VisitHistoryFilters
-            filters={{
-              ...filters,
-              search: searchInput,
-            }}
-            branches={branches}
-            visitors={visitors}
-            showVisitorFilter={isAdmin}
-            onChange={(nextFilters) => {
-              setSearchInput(nextFilters.search)
-              setFilters({
-                branchId: nextFilters.branchId,
-                visitorId: nextFilters.visitorId,
-                status: nextFilters.status,
-                fromDate: nextFilters.fromDate,
-                toDate: nextFilters.toDate,
-                sortBy: nextFilters.sortBy,
-                sortDir: nextFilters.sortDir,
-                page: 1,
-                pageSize: nextFilters.pageSize,
-              })
-            }}
-          />
+          {isError ? (
+            <ErrorState
+              title="Unable to load visit history"
+              message={
+                error instanceof Error
+                  ? error.message
+                  : 'Please try again in a moment.'
+              }
+              onRetry={() => void refetch()}
+              isRetrying={isFetching}
+            />
+          ) : null}
 
-          {isError && (
-            <div
-              role="alert"
-              className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-            >
-              {error instanceof Error
-                ? error.message
-                : 'Unable to load visit history.'}
-            </div>
-          )}
+          {!isError && showSkeleton ? <VisitHistoryTableSkeleton /> : null}
 
-          {!isError && showSkeleton && <VisitHistoryTableSkeleton />}
-
-          {!isError && !showSkeleton && data && (
+          {!isError && !showSkeleton && data ? (
             <>
               <VisitHistoryTable
                 rows={data.rows}
                 sortBy={filters.sortBy}
                 sortDir={filters.sortDir}
+                searchQuery={debouncedSearch}
                 onSort={handleSort}
                 canDeleteVisit={canDeleteVisit}
                 onDelete={handleDeleteRequest}
               />
 
-              <div className="flex flex-col gap-4 border-t border-border/70 pt-4 lg:flex-row lg:items-center lg:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {paginationLabel}
-                </p>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex items-center gap-2">
-                    <Label
-                      htmlFor="visit-history-page-size"
-                      className="sr-only"
-                    >
-                      Rows per page
-                    </Label>
-                    <Select
-                      id="visit-history-page-size"
-                      value={String(filters.pageSize)}
-                      onChange={(event) =>
-                        setFilters((current) => ({
-                          ...current,
-                          pageSize: Number(event.target.value),
-                          page: 1,
-                        }))
-                      }
-                    >
-                      {VISITS_HISTORY_PAGE_SIZE_OPTIONS.map((size) => (
-                        <option key={size} value={size}>
-                          {size} rows
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={filters.page <= 1}
-                      onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          page: current.page - 1,
-                        }))
-                      }
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {data.page} of {data.totalPages}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={filters.page >= data.totalPages}
-                      onClick={() =>
-                        setFilters((current) => ({
-                          ...current,
-                          page: current.page + 1,
-                        }))
-                      }
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              {data.totalCount > 0 ? (
+                <TablePagination
+                  label={paginationLabel}
+                  page={data.page}
+                  totalPages={data.totalPages}
+                  pageSize={filters.pageSize}
+                  pageSizeOptions={VISITS_HISTORY_PAGE_SIZE_OPTIONS}
+                  pageSizeId="visit-history-page-size"
+                  onPageChange={(page) =>
+                    setFilters((current) => ({ ...current, page }))
+                  }
+                  onPageSizeChange={(pageSize) =>
+                    setFilters((current) => ({ ...current, pageSize, page: 1 }))
+                  }
+                />
+              ) : null}
             </>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

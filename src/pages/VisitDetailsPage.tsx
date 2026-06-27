@@ -2,6 +2,7 @@ import { ArrowLeft, Download, Loader2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import { ErrorState } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
 import {
@@ -33,7 +34,7 @@ export function VisitDetailsPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { isAdmin } = useAuth()
-  const { data, isLoading, isError, error } = useVisitDetails(visitId)
+  const { data, isLoading, isError, error, refetch } = useVisitDetails(visitId)
   const reviewVisitMutation = useReviewVisit()
   const createFollowUpMutation = useCreateFollowUpVisit()
   const downloadVisitPdfMutation = useDownloadVisitPdf()
@@ -177,12 +178,15 @@ export function VisitDetailsPage() {
 
   if (isError) {
     return (
-      <div
-        role="alert"
-        className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-6 text-sm text-destructive"
-      >
-        {error instanceof Error ? error.message : 'Unable to load visit.'}
-      </div>
+      <ErrorState
+        title="Unable to load visit"
+        message={
+          error instanceof Error
+            ? error.message
+            : 'Please try again in a moment.'
+        }
+        onRetry={() => void refetch()}
+      />
     )
   }
 
@@ -191,7 +195,7 @@ export function VisitDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {data.visitNumber}

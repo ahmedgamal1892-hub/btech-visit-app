@@ -1,5 +1,6 @@
 import {
   ClipboardList,
+  FileBarChart,
   History,
   LayoutDashboard,
   LogOut,
@@ -34,6 +35,11 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Visit History',
     href: '/visit-history',
     icon: History,
+  },
+  {
+    title: 'Reports',
+    href: '/reports',
+    icon: FileBarChart,
   },
   {
     title: 'Users',

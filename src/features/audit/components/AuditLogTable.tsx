@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { AuditLogEntry } from '@/types/audit'
+import { highlightMatch } from '@/lib/utils/highlight-text'
 
 type AuditLogDetailsDialogProps = {
   entry: AuditLogEntry | null
@@ -112,33 +113,42 @@ export function AuditLogDetailsDialog({
 
 type AuditLogTableProps = {
   rows: AuditLogEntry[]
+  searchQuery?: string
   onSelect: (entry: AuditLogEntry) => void
 }
 
 function AuditLogCard({
   row,
   onSelect,
+  searchQuery = '',
 }: {
   row: AuditLogEntry
   onSelect: (entry: AuditLogEntry) => void
+  searchQuery?: string
 }) {
   return (
     <button
       type="button"
-      className="w-full rounded-2xl border border-border/70 p-4 text-left transition-colors hover:bg-muted/30"
+      className="surface-card w-full p-4 text-left transition-colors hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       onClick={() => onSelect(row)}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-medium text-foreground">{row.action}</p>
-          <p className="text-sm text-muted-foreground">{row.actorUsername}</p>
+          <p className="font-medium text-foreground">
+            {highlightMatch(row.action, searchQuery)}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {highlightMatch(row.actorUsername, searchQuery)}
+          </p>
         </div>
         <Badge variant="secondary">{row.entityType}</Badge>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
         {formatTimestamp(row.createdAt)}
       </p>
-      <p className="mt-1 text-sm">{row.entityName ?? row.entityId ?? '—'}</p>
+      <p className="mt-1 text-sm">
+        {highlightMatch(row.entityName ?? row.entityId ?? '—', searchQuery)}
+      </p>
     </button>
   )
 }
@@ -147,13 +157,17 @@ export function AuditLogTableSkeleton() {
   return (
     <div className="space-y-4">
       {Array.from({ length: 4 }).map((_, index) => (
-        <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+        <Skeleton key={index} className="h-24 w-full rounded-xl" />
       ))}
     </div>
   )
 }
 
-export function AuditLogTable({ rows, onSelect }: AuditLogTableProps) {
+export function AuditLogTable({
+  rows,
+  searchQuery = '',
+  onSelect,
+}: AuditLogTableProps) {
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -168,7 +182,12 @@ export function AuditLogTable({ rows, onSelect }: AuditLogTableProps) {
     <>
       <div className="grid gap-4 md:hidden">
         {rows.map((row) => (
-          <AuditLogCard key={row.id} row={row} onSelect={onSelect} />
+          <AuditLogCard
+            key={row.id}
+            row={row}
+            onSelect={onSelect}
+            searchQuery={searchQuery}
+          />
         ))}
       </div>
 
@@ -188,12 +207,20 @@ export function AuditLogTable({ rows, onSelect }: AuditLogTableProps) {
             {rows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell>{formatTimestamp(row.createdAt)}</TableCell>
-                <TableCell>{row.actorUsername}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{row.action}</Badge>
+                  {highlightMatch(row.actorUsername, searchQuery)}
                 </TableCell>
-                <TableCell>{row.entityType}</TableCell>
-                <TableCell>{row.entityName ?? '—'}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {highlightMatch(row.action, searchQuery)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {highlightMatch(row.entityType, searchQuery)}
+                </TableCell>
+                <TableCell>
+                  {highlightMatch(row.entityName ?? '—', searchQuery)}
+                </TableCell>
                 <TableCell className="text-right">
                   <TableActionButton
                     label="View"

@@ -1,4 +1,8 @@
 import { getSupabaseClient } from '@/services/supabase/client'
+import {
+  DELETED_USER_USERNAME,
+  VISIT_OWNER_ROLES,
+} from '@/lib/utils/visit-owners'
 import type {
   VisitHistoryFilters,
   VisitHistoryResult,
@@ -92,8 +96,10 @@ export async function fetchVisitHistoryVisitors(): Promise<
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, username')
-    .eq('role', 'Visitor')
+    .select('id, full_name, username, role, is_active')
+    .in('role', [...VISIT_OWNER_ROLES])
+    .eq('is_active', true)
+    .neq('username', DELETED_USER_USERNAME)
     .order('full_name', { ascending: true })
 
   if (error) {

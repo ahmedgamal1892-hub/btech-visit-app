@@ -72,8 +72,17 @@ export function useUserDirectory(filters: UserDirectoryFilters) {
     return {
       data: undefined,
       isLoading,
+      isFetching:
+        profilesQuery.isFetching ||
+        metricsQuery.isFetching ||
+        lastLoginQuery.isFetching,
       isError,
       error,
+      refetch: () => {
+        void profilesQuery.refetch()
+        void metricsQuery.refetch()
+        void lastLoginQuery.refetch()
+      },
     }
   }
 
@@ -92,8 +101,17 @@ export function useUserDirectory(filters: UserDirectoryFilters) {
   return {
     data: paginated,
     isLoading,
+    isFetching:
+      profilesQuery.isFetching ||
+      metricsQuery.isFetching ||
+      lastLoginQuery.isFetching,
     isError,
     error,
+    refetch: () => {
+      void profilesQuery.refetch()
+      void metricsQuery.refetch()
+      void lastLoginQuery.refetch()
+    },
   }
 }
 
