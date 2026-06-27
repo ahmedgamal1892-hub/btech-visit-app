@@ -1,10 +1,5 @@
-import { PagePlaceholder } from '@/components/common'
+import { EnterpriseSettingsModule } from '@/features/settings'
 
 export function SettingsPage() {
-  return (
-    <PagePlaceholder
-      title="Settings"
-      description="Application settings will be implemented in a future sprint."
-    />
-  )
+  return <EnterpriseSettingsModule />
 }

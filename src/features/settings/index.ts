@@ -1,1 +1,1 @@
-export const featureName = 'settings' as const
+export { EnterpriseSettingsModule } from './components/EnterpriseSettingsModule'
