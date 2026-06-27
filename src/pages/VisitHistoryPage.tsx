@@ -1,6 +1,7 @@
 import { History, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import { PageHeader } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -152,18 +153,11 @@ export function VisitHistoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2">
-          <History className="size-6 text-accent" aria-hidden="true" />
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Visit History
-          </h2>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Browse submitted visits, filter by branch or visitor, and open visit
-          details.
-        </p>
-      </div>
+      <PageHeader
+        title="Visit History"
+        description="Browse submitted visits, filter by branch or visitor, and open visit details."
+        icon={History}
+      />
 
       <Card className="rounded-2xl border-border/70 shadow-sm">
         <CardHeader>

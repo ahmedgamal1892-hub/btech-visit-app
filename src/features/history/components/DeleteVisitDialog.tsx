@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { DangerButton, SecondaryButton } from '@/components/ui/action-buttons'
 import {
   Dialog,
   DialogContent,
@@ -52,17 +52,15 @@ export function DeleteVisitDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button
+          <SecondaryButton
             type="button"
-            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
             Cancel
-          </Button>
-          <Button
+          </SecondaryButton>
+          <DangerButton
             type="button"
-            variant="destructive"
             disabled={isSubmitting}
             onClick={() => void onConfirm()}
           >
@@ -74,7 +72,7 @@ export function DeleteVisitDialog({
             ) : (
               'Delete Visit'
             )}
-          </Button>
+          </DangerButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

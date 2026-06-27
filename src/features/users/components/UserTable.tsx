@@ -1,11 +1,13 @@
 import { KeyRound, Pencil, Trash2, UserCheck, UserX } from 'lucide-react'
 
+import { EmptyState } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { TableActionButton } from '@/components/ui/action-buttons'
 import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableHeader,
   TableRow,
@@ -63,59 +65,38 @@ function UserActions({
   }
 
   return (
-    <div className="flex flex-wrap justify-end gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
+    <div className="flex flex-wrap justify-end gap-1.5">
+      <TableActionButton
+        icon={Pencil}
+        label="Edit"
         onClick={() => onEdit(user)}
-      >
-        <Pencil className="size-4" />
-        Edit
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
+      />
+      <TableActionButton
+        icon={KeyRound}
+        label="Reset Password"
         onClick={() => onResetPassword(user)}
-      >
-        <KeyRound className="size-4" />
-        Reset Password
-      </Button>
+      />
       {allowToggleActive ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
+        <TableActionButton
+          label={
+            isToggling
+              ? 'Updating...'
+              : user.is_active
+                ? 'Deactivate'
+                : 'Activate'
+          }
+          icon={user.is_active ? UserX : UserCheck}
           disabled={isToggling}
           onClick={() => onToggleActive(user)}
-        >
-          {isToggling ? (
-            'Updating...'
-          ) : user.is_active ? (
-            <>
-              <UserX className="size-4" />
-              Deactivate
-            </>
-          ) : (
-            <>
-              <UserCheck className="size-4" />
-              Activate
-            </>
-          )}
-        </Button>
+        />
       ) : null}
       {allowDelete ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-destructive hover:text-destructive"
+        <TableActionButton
+          icon={Trash2}
+          label="Delete"
+          tone="danger"
           onClick={() => onDelete(user)}
-        >
-          <Trash2 className="size-4" />
-          Delete
-        </Button>
+        />
       ) : null}
       {isCurrentUser && (
         <p className="w-full text-right text-xs text-muted-foreground">
@@ -192,12 +173,11 @@ export function UserTable({
 }: UserTableProps) {
   if (users.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/70 px-6 py-12 text-center">
-        <p className="text-sm font-medium text-foreground">No users found</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Try adjusting your search or filters.
-        </p>
-      </div>
+      <EmptyState
+        title="No users found"
+        description="Try adjusting your search or filters to find users in the directory."
+        useBrandLogo
+      />
     )
   }
 
@@ -218,7 +198,7 @@ export function UserTable({
         ))}
       </div>
 
-      <div className="hidden overflow-hidden rounded-2xl border border-border/70 md:block">
+      <TableContainer maxHeight="70vh" className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -265,7 +245,7 @@ export function UserTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableContainer>
     </>
   )
 }

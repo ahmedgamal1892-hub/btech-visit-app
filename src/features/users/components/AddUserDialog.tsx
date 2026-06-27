@@ -3,10 +3,12 @@ import { Loader2 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
-import { Button } from '@/components/ui/button'
+import { FormField } from '@/components/common'
+import { PrimaryButton, SecondaryButton } from '@/components/ui/action-buttons'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -80,91 +82,90 @@ export function AddUserDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={submit} noValidate>
-          <div className="space-y-2">
-            <Label htmlFor="add-full-name">Full Name</Label>
-            <Input id="add-full-name" {...register('fullName')} />
-            {errors.fullName && (
-              <p className="text-sm text-destructive">
-                {errors.fullName.message}
-              </p>
-            )}
-          </div>
+        <form className="space-y-5" onSubmit={submit} noValidate>
+          <DialogBody>
+            <FormField
+              label="Full Name"
+              htmlFor="add-full-name"
+              error={errors.fullName?.message}
+              required
+            >
+              <Input id="add-full-name" {...register('fullName')} />
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="add-username">Username</Label>
-            <Input
-              id="add-username"
-              autoComplete="off"
-              {...register('username')}
-            />
-            {errors.username && (
-              <p className="text-sm text-destructive">
-                {errors.username.message}
-              </p>
-            )}
-          </div>
+            <FormField
+              label="Username"
+              htmlFor="add-username"
+              error={errors.username?.message}
+              required
+            >
+              <Input
+                id="add-username"
+                autoComplete="off"
+                {...register('username')}
+              />
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="add-password">Password</Label>
-            <Input
-              id="add-password"
-              type="password"
-              autoComplete="new-password"
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+            <FormField
+              label="Password"
+              htmlFor="add-password"
+              error={errors.password?.message}
+              required
+            >
+              <Input
+                id="add-password"
+                type="password"
+                autoComplete="new-password"
+                {...register('password')}
+              />
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="add-phone">Phone</Label>
-            <Input id="add-phone" type="tel" {...register('phone')} />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
-          </div>
+            <FormField
+              label="Phone"
+              htmlFor="add-phone"
+              error={errors.phone?.message}
+            >
+              <Input id="add-phone" type="tel" {...register('phone')} />
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="add-role">Role</Label>
-            <Select id="add-role" {...register('role')}>
-              <option value="Visitor">Visitor</option>
-              <option value="Admin">Admin</option>
-            </Select>
-            {errors.role && (
-              <p className="text-sm text-destructive">{errors.role.message}</p>
-            )}
-          </div>
+            <FormField
+              label="Role"
+              htmlFor="add-role"
+              error={errors.role?.message}
+              required
+            >
+              <Select id="add-role" {...register('role')}>
+                <option value="Visitor">Visitor</option>
+                <option value="Admin">Admin</option>
+              </Select>
+            </FormField>
 
-          <div className="flex items-center gap-3 rounded-lg border border-border/70 px-3 py-3">
-            <Checkbox
-              id="add-is-active"
-              checked={isActive}
-              onCheckedChange={(checked) =>
-                setValue('isActive', checked === true)
-              }
-            />
-            <div>
-              <Label htmlFor="add-is-active">Active</Label>
-              <p className="text-sm text-muted-foreground">
-                Inactive users cannot sign in.
-              </p>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3">
+              <Checkbox
+                id="add-is-active"
+                checked={isActive}
+                onCheckedChange={(checked) =>
+                  setValue('isActive', checked === true)
+                }
+              />
+              <div>
+                <Label htmlFor="add-is-active">Active</Label>
+                <p className="text-sm text-muted-foreground">
+                  Inactive users cannot sign in.
+                </p>
+              </div>
             </div>
-          </div>
+          </DialogBody>
 
           <DialogFooter>
-            <Button
+            <SecondaryButton
               type="button"
-              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
               Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -173,7 +174,7 @@ export function AddUserDialog({
               ) : (
                 'Create User'
               )}
-            </Button>
+            </PrimaryButton>
           </DialogFooter>
         </form>
       </DialogContent>

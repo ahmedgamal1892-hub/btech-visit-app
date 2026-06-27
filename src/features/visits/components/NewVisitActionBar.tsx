@@ -21,12 +21,7 @@ export function NewVisitActionBar({
         <Button type="button" variant="outline" disabled title="Coming Soon">
           Save Draft
         </Button>
-        <Button
-          type="button"
-          className="bg-accent text-accent-foreground hover:bg-accent/90"
-          disabled={isSubmitting}
-          onClick={onSubmit}
-        >
+        <Button type="button" disabled={isSubmitting} onClick={onSubmit}>
           {isSubmitting ? (
             <>
               <Loader2 className="size-4 animate-spin" />

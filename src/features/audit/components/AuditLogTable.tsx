@@ -1,7 +1,11 @@
 import { Loader2 } from 'lucide-react'
 
+import { EmptyState } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import {
+  SecondaryButton,
+  TableActionButton,
+} from '@/components/ui/action-buttons'
 import {
   Dialog,
   DialogContent,
@@ -14,6 +18,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableHeader,
   TableRow,
@@ -151,14 +156,11 @@ export function AuditLogTableSkeleton() {
 export function AuditLogTable({ rows, onSelect }: AuditLogTableProps) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/70 px-6 py-12 text-center">
-        <p className="text-sm font-medium text-foreground">
-          No audit logs found
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Try adjusting your search or filters.
-        </p>
-      </div>
+      <EmptyState
+        title="No audit logs found"
+        description="Try adjusting your search or filters to review application activity."
+        useBrandLogo
+      />
     )
   }
 
@@ -170,7 +172,7 @@ export function AuditLogTable({ rows, onSelect }: AuditLogTableProps) {
         ))}
       </div>
 
-      <div className="hidden overflow-hidden rounded-2xl border border-border/70 md:block">
+      <TableContainer maxHeight="70vh" className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -193,20 +195,16 @@ export function AuditLogTable({ rows, onSelect }: AuditLogTableProps) {
                 <TableCell>{row.entityType}</TableCell>
                 <TableCell>{row.entityName ?? '—'}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                  <TableActionButton
+                    label="View"
                     onClick={() => onSelect(row)}
-                  >
-                    View
-                  </Button>
+                  />
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableContainer>
     </>
   )
 }
@@ -219,12 +217,7 @@ export function AuditLogExportButton({
   onExport: () => void
 }) {
   return (
-    <Button
-      type="button"
-      variant="outline"
-      disabled={isExporting}
-      onClick={onExport}
-    >
+    <SecondaryButton type="button" disabled={isExporting} onClick={onExport}>
       {isExporting ? (
         <>
           <Loader2 className="size-4 animate-spin" />
@@ -233,6 +226,6 @@ export function AuditLogExportButton({
       ) : (
         'Export to Excel'
       )}
-    </Button>
+    </SecondaryButton>
   )
 }

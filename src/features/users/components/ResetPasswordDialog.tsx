@@ -3,9 +3,11 @@ import { Loader2, Mail } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { Button } from '@/components/ui/button'
+import { FormField } from '@/components/common'
+import { PrimaryButton, SecondaryButton } from '@/components/ui/action-buttons'
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -13,12 +15,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from '@/lib/validations/users'
 import type { UserProfile } from '@/types/user'
+import { cn } from '@/lib/utils'
 
 type ResetPasswordDialogProps = {
   user: UserProfile | null
@@ -85,69 +87,76 @@ export function ResetPasswordDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex gap-2">
-          <Button
+        <div className="flex gap-2 rounded-xl bg-muted/40 p-1">
+          <SecondaryButton
             type="button"
-            variant={mode === 'set' ? 'default' : 'outline'}
             size="sm"
+            className={cn(
+              'flex-1 shadow-none',
+              mode === 'set' && 'bg-background text-foreground shadow-sm',
+            )}
             onClick={() => setMode('set')}
             disabled={isBusy}
           >
             Set Password
-          </Button>
-          <Button
+          </SecondaryButton>
+          <SecondaryButton
             type="button"
-            variant={mode === 'email' ? 'default' : 'outline'}
             size="sm"
+            className={cn(
+              'flex-1 shadow-none',
+              mode === 'email' && 'bg-background text-foreground shadow-sm',
+            )}
             onClick={() => setMode('email')}
             disabled={isBusy}
           >
             Send Reset Email
-          </Button>
+          </SecondaryButton>
         </div>
 
         {mode === 'set' ? (
-          <form className="space-y-4" onSubmit={submit} noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="reset-password">New Password</Label>
-              <Input
-                id="reset-password"
-                type="password"
-                autoComplete="new-password"
-                {...register('password')}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+          <form className="space-y-5" onSubmit={submit} noValidate>
+            <DialogBody>
+              <FormField
+                label="New Password"
+                htmlFor="reset-password"
+                error={errors.password?.message}
+                required
+              >
+                <Input
+                  id="reset-password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.password)}
+                  {...register('password')}
+                />
+              </FormField>
 
-            <div className="space-y-2">
-              <Label htmlFor="reset-confirm-password">Confirm Password</Label>
-              <Input
-                id="reset-confirm-password"
-                type="password"
-                autoComplete="new-password"
-                {...register('confirmPassword')}
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-destructive">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
+              <FormField
+                label="Confirm Password"
+                htmlFor="reset-confirm-password"
+                error={errors.confirmPassword?.message}
+                required
+              >
+                <Input
+                  id="reset-confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.confirmPassword)}
+                  {...register('confirmPassword')}
+                />
+              </FormField>
+            </DialogBody>
 
             <DialogFooter>
-              <Button
+              <SecondaryButton
                 type="button"
-                variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isBusy}
               >
                 Cancel
-              </Button>
-              <Button type="submit" disabled={isBusy}>
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={isBusy}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
@@ -156,26 +165,25 @@ export function ResetPasswordDialog({
                 ) : (
                   'Reset Password'
                 )}
-              </Button>
+              </PrimaryButton>
             </DialogFooter>
           </form>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
               Supabase will email a password reset link to this user&apos;s
               registered address.
             </p>
 
             <DialogFooter>
-              <Button
+              <SecondaryButton
                 type="button"
-                variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isBusy}
               >
                 Cancel
-              </Button>
-              <Button
+              </SecondaryButton>
+              <PrimaryButton
                 type="button"
                 disabled={isBusy}
                 onClick={() => void onSendResetEmail()}
@@ -191,7 +199,7 @@ export function ResetPasswordDialog({
                     Send Reset Email
                   </>
                 )}
-              </Button>
+              </PrimaryButton>
             </DialogFooter>
           </div>
         )}

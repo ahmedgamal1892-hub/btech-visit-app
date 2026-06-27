@@ -2,6 +2,7 @@ import { Loader2, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
+import { PageHeader } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/components/ui/toast'
@@ -237,18 +238,11 @@ export function DailyUploadPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2">
-          <Upload className="size-6 text-accent" aria-hidden="true" />
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Daily Upload
-          </h2>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Upload the Display and Sales Achievement Excel files to replace the
-          current operational snapshot.
-        </p>
-      </div>
+      <PageHeader
+        title="Daily Upload"
+        description="Upload the Display and Sales Achievement Excel files to replace the current operational snapshot."
+        icon={Upload}
+      />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <ExcelUploadCard
@@ -312,7 +306,6 @@ export function DailyUploadPage() {
         </p>
         <Button
           type="button"
-          className="bg-accent text-accent-foreground hover:bg-accent/90"
           disabled={!validation.isValid || isUploading}
           onClick={() => void handleUpload()}
         >

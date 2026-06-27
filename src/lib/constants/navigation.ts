@@ -11,8 +11,7 @@ import {
 
 import type { NavItem } from '@/types'
 
-export const APP_NAME = 'BTECH Visit App'
-export const APP_TAGLINE = 'Store Visit Management System for B.TECH'
+export { APP_NAME, APP_TAGLINE } from './branding'
 
 export const NAV_ITEMS: NavItem[] = [
   {

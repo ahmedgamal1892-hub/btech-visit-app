@@ -1,12 +1,17 @@
 import { ArrowUpDown, Eye, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/common'
+import {
+  PrimaryButton,
+  TableActionButton,
+} from '@/components/ui/action-buttons'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableHeader,
   TableRow,
@@ -116,26 +121,18 @@ function VisitHistoryCard({
       </dl>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
+        <TableActionButton
+          icon={Eye}
+          label="View"
           onClick={() => onView(row)}
-        >
-          <Eye className="size-4" />
-          View
-        </Button>
+        />
         {canDelete ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:text-destructive"
+          <TableActionButton
+            icon={Trash2}
+            label="Delete"
+            tone="danger"
             onClick={() => onDelete(row)}
-          >
-            <Trash2 className="size-4" />
-            Delete
-          </Button>
+          />
         ) : null}
       </div>
     </div>
@@ -163,7 +160,7 @@ export function VisitHistoryTableSkeleton() {
         ))}
       </div>
 
-      <div className="hidden overflow-hidden rounded-2xl border border-border/70 md:block">
+      <TableContainer maxHeight="70vh" className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -186,7 +183,7 @@ export function VisitHistoryTableSkeleton() {
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableContainer>
     </>
   )
 }
@@ -212,9 +209,16 @@ export function VisitHistoryTable({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/70 px-6 py-16 text-center">
-        <p className="text-sm font-medium text-foreground">No visits found.</p>
-      </div>
+      <EmptyState
+        title="No visits found"
+        description="Try adjusting your search or filters, or start a new visit."
+        useBrandLogo
+        action={
+          <PrimaryButton type="button" onClick={() => navigate('/new-visit')}>
+            New Visit
+          </PrimaryButton>
+        }
+      />
     )
   }
 
@@ -232,7 +236,7 @@ export function VisitHistoryTable({
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-2xl border border-border/70 md:block">
+      <TableContainer maxHeight="70vh" className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -288,27 +292,19 @@ export function VisitHistoryTable({
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
+                  <div className="flex justify-end gap-1.5">
+                    <TableActionButton
+                      icon={Eye}
+                      label="View"
                       onClick={() => handleView(row)}
-                    >
-                      <Eye className="size-4" />
-                      View
-                    </Button>
+                    />
                     {canDeleteVisit(row) ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
+                      <TableActionButton
+                        icon={Trash2}
+                        label="Delete"
+                        tone="danger"
                         onClick={() => onDelete(row)}
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </Button>
+                      />
                     ) : null}
                   </div>
                 </TableCell>
@@ -316,7 +312,7 @@ export function VisitHistoryTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableContainer>
     </>
   )
 }

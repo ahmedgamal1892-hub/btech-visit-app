@@ -2,6 +2,8 @@ import { Loader2, Plus, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
+import { PageHeader } from '@/components/common'
+import { PrimaryButton } from '@/components/ui/action-buttons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
@@ -300,28 +302,17 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Users className="size-6 text-accent" aria-hidden="true" />
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Users
-            </h2>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage application users, roles, and access.
-          </p>
-        </div>
-
-        <Button
-          type="button"
-          className="bg-accent text-accent-foreground hover:bg-accent/90"
-          onClick={() => setIsAddOpen(true)}
-        >
-          <Plus className="size-4" />
-          Add User
-        </Button>
-      </div>
+      <PageHeader
+        title="Users"
+        description="Manage application users, roles, and access."
+        icon={Users}
+        actions={
+          <PrimaryButton type="button" onClick={() => setIsAddOpen(true)}>
+            <Plus className="size-4" />
+            Add User
+          </PrimaryButton>
+        }
+      />
 
       <Card className="rounded-2xl border-border/70 shadow-sm">
         <CardHeader>

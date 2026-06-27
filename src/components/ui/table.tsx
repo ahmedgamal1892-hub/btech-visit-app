@@ -2,15 +2,38 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
+type TableContainerProps = React.ComponentProps<'div'> & {
+  maxHeight?: string
+}
+
+function TableContainer({
+  className,
+  maxHeight,
+  children,
+  ...props
+}: TableContainerProps) {
+  return (
+    <div
+      data-slot="table-container"
+      className={cn(
+        'relative w-full overflow-auto rounded-2xl border border-border bg-card shadow-sm',
+        className,
+      )}
+      style={maxHeight ? { maxHeight } : undefined}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-auto">
-      <table
-        data-slot="table"
-        className={cn('w-full caption-bottom text-sm', className)}
-        {...props}
-      />
-    </div>
+    <table
+      data-slot="table"
+      className={cn('w-full caption-bottom text-sm', className)}
+      {...props}
+    />
   )
 }
 
@@ -18,7 +41,10 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
   return (
     <thead
       data-slot="table-header"
-      className={cn('[&_tr]:border-b', className)}
+      className={cn(
+        'bg-muted/80 backdrop-blur-sm [&_tr]:border-b [&_tr]:border-border',
+        className,
+      )}
       {...props}
     />
   )
@@ -28,7 +54,10 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn('[&_tr:last-child]:border-0', className)}
+      className={cn(
+        '[&_tr:last-child]:border-0 [&_tr:nth-child(even)]:bg-muted/25',
+        className,
+      )}
       {...props}
     />
   )
@@ -39,7 +68,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
     <tr
       data-slot="table-row"
       className={cn(
-        'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+        'border-b border-border transition-colors duration-150 hover:bg-primary/5 data-[state=selected]:bg-muted',
         className,
       )}
       {...props}
@@ -52,7 +81,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     <th
       data-slot="table-head"
       className={cn(
-        'h-11 px-4 text-left align-middle text-xs font-semibold tracking-wide text-muted-foreground uppercase',
+        'sticky top-0 z-10 h-12 bg-muted/95 px-4 text-left align-middle text-xs font-semibold tracking-wide text-foreground/70 uppercase backdrop-blur-sm',
         className,
       )}
       {...props}
@@ -64,10 +93,18 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td
       data-slot="table-cell"
-      className={cn('px-4 py-3 align-middle', className)}
+      className={cn('px-4 py-3.5 align-middle', className)}
       {...props}
     />
   )
 }
 
-export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }
+export {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableHeader,
+  TableRow,
+}

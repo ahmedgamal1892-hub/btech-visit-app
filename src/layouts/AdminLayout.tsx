@@ -21,7 +21,7 @@ export function AdminLayout() {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent
           side="left"
-          className="w-72 border-none bg-sidebar p-0 text-sidebar-foreground [&>button]:text-sidebar-foreground"
+          className="w-72 border-none bg-sidebar p-0 text-sidebar-foreground transition-transform duration-300 ease-out data-[state=closed]:duration-250 data-[state=open]:duration-350 [&>button]:text-sidebar-foreground"
           showCloseButton
         >
           <Sidebar onNavigate={() => setMobileNavOpen(false)} />
@@ -34,7 +34,7 @@ export function AdminLayout() {
           onMenuClick={() => setMobileNavOpen(true)}
         />
 
-        <main className="flex-1 px-4 py-6 md:px-6 md:py-8 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6 md:py-8 lg:px-8">
           <Outlet />
         </main>
       </div>

@@ -1,5 +1,6 @@
 import type { jsPDF } from 'jspdf'
 
+import { BRAND_COLORS_RGB } from '@/lib/constants/branding'
 import type { VisitBadgeDisplay } from '@/utils/visit-status-badge'
 import type { PdfBadgeColors } from '@/utils/achievement-badge'
 
@@ -13,16 +14,19 @@ export const CARD_RADIUS = 3
 export const BADGE_RADIUS = 2
 
 export const COLORS = {
-  primary: [15, 76, 129] as [number, number, number],
-  secondary: [245, 247, 250] as [number, number, number],
-  accent: [255, 122, 0] as [number, number, number],
-  border: [217, 226, 236] as [number, number, number],
-  textPrimary: [15, 23, 42] as [number, number, number],
-  textMuted: [100, 116, 139] as [number, number, number],
-  textBody: [51, 65, 85] as [number, number, number],
-  white: [255, 255, 255] as [number, number, number],
-  rowAlt: [248, 250, 252] as [number, number, number],
+  primary: BRAND_COLORS_RGB.primary,
+  secondary: BRAND_COLORS_RGB.background,
+  accent: BRAND_COLORS_RGB.primary,
+  border: BRAND_COLORS_RGB.border,
+  textPrimary: BRAND_COLORS_RGB.dark,
+  textMuted: [107, 114, 128] as [number, number, number],
+  textBody: [55, 65, 81] as [number, number, number],
+  white: BRAND_COLORS_RGB.card,
+  rowAlt: BRAND_COLORS_RGB.background,
   shadow: [226, 232, 240] as [number, number, number],
+  success: BRAND_COLORS_RGB.success,
+  warning: BRAND_COLORS_RGB.warning,
+  danger: BRAND_COLORS_RGB.danger,
 }
 
 export type PdfCursor = {

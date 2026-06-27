@@ -49,11 +49,11 @@ export function VisitSubmitSuccessPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center py-6 sm:py-10">
-      <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+      <div className="flex size-16 items-center justify-center rounded-full bg-success/10 text-success">
         <CheckCircle2 className="size-8" aria-hidden="true" />
       </div>
 
-      <h2 className="mt-6 text-center text-2xl font-semibold tracking-tight text-foreground">
+      <h2 className="page-title mt-6 text-center">
         Visit submitted successfully.
       </h2>
       <p className="mt-2 text-center text-sm text-muted-foreground">
@@ -92,7 +92,7 @@ export function VisitSubmitSuccessPage() {
       <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
         <Button
           type="button"
-          className="bg-accent text-accent-foreground hover:bg-accent/90 sm:min-w-40"
+          className="sm:min-w-40"
           onClick={() => navigate(`/visit-history/${state.visitId}`)}
         >
           <Eye className="size-4" />

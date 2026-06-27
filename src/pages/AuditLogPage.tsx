@@ -2,6 +2,7 @@ import { ClipboardList, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
+import { PageHeader } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -139,25 +140,17 @@ export function AuditLogPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <ClipboardList className="size-6 text-accent" aria-hidden="true" />
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Audit Log
-            </h2>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review application activity across users, visits, imports, and
-            settings.
-          </p>
-        </div>
-
-        <AuditLogExportButton
-          isExporting={isExporting}
-          onExport={() => void handleExport()}
-        />
-      </div>
+      <PageHeader
+        title="Audit Log"
+        description="Review application activity across users, visits, imports, and settings."
+        icon={ClipboardList}
+        actions={
+          <AuditLogExportButton
+            isExporting={isExporting}
+            onExport={() => void handleExport()}
+          />
+        }
+      />
 
       <Card className="rounded-2xl border-border/70 shadow-sm">
         <CardHeader>

@@ -27,6 +27,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -43,32 +45,34 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #ffffff;
-  --foreground: #1f2937;
+  --background: #f8f9fb;
+  --foreground: #111827;
   --card: #ffffff;
-  --card-foreground: #1f2937;
+  --card-foreground: #111827;
   --popover: #ffffff;
-  --popover-foreground: #1f2937;
-  --primary: #374151;
+  --popover-foreground: #111827;
+  --primary: #ff6a00;
   --primary-foreground: #ffffff;
-  --secondary: #f3f4f6;
-  --secondary-foreground: #1f2937;
-  --muted: #f9fafb;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #111827;
+  --muted: #f1f5f9;
   --muted-foreground: #6b7280;
-  --accent: #f97316;
+  --accent: #ff6a00;
   --accent-foreground: #ffffff;
-  --destructive: #ef4444;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #f59e0b;
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: #f97316;
-  --sidebar: #1f2937;
+  --ring: #ff6a00;
+  --sidebar: #111827;
   --sidebar-foreground: #f9fafb;
-  --sidebar-primary: #f97316;
+  --sidebar-primary: #ff6a00;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgba(255, 255, 255, 0.08);
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #f97316;
+  --sidebar-ring: #ff6a00;
 }
 
 @layer base {
@@ -82,5 +86,31 @@
 
   #root {
     @apply min-h-svh;
+  }
+}
+
+@layer components {
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+
+  .page-description {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold tracking-tight text-foreground;
+  }
+
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .form-error {
+    @apply text-sm font-medium text-destructive;
+  }
+
+  .surface-card {
+    @apply rounded-xl border border-border bg-card shadow-md;
   }
 }
