@@ -1,4 +1,4 @@
-import { KeyRound, Pencil, Trash2 } from 'lucide-react'
+import { KeyRound, Pencil, Trash2, UserCheck, UserX } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { canDeleteUser } from '@/features/users/utils/self-guards'
+import {
+  canDeleteUser,
+  canToggleUserActive,
+  isDeletedUserPlaceholder,
+} from '@/features/users/utils/self-guards'
 import type { UserProfile } from '@/types/user'
 
 type UserTableProps = {
@@ -18,7 +22,9 @@ type UserTableProps = {
   currentUserId?: string
   onEdit: (user: UserProfile) => void
   onResetPassword: (user: UserProfile) => void
+  onToggleActive: (user: UserProfile) => void
   onDelete: (user: UserProfile) => void
+  togglingUserId?: string | null
 }
 
 function formatPhone(phone: string | null) {
@@ -30,16 +36,31 @@ function UserActions({
   currentUserId,
   onEdit,
   onResetPassword,
+  onToggleActive,
   onDelete,
+  togglingUserId,
 }: {
   user: UserProfile
   currentUserId?: string
   onEdit: (user: UserProfile) => void
   onResetPassword: (user: UserProfile) => void
+  onToggleActive: (user: UserProfile) => void
   onDelete: (user: UserProfile) => void
+  togglingUserId?: string | null
 }) {
   const isCurrentUser = user.id === currentUserId
-  const allowDelete = canDeleteUser(currentUserId, user.id)
+  const allowDelete = canDeleteUser(currentUserId, user)
+  const allowToggleActive = canToggleUserActive(currentUserId, user)
+  const isToggling = togglingUserId === user.id
+  const isPlaceholder = isDeletedUserPlaceholder(user)
+
+  if (isPlaceholder) {
+    return (
+      <p className="text-right text-xs text-muted-foreground">
+        System placeholder account
+      </p>
+    )
+  }
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
@@ -61,7 +82,30 @@ function UserActions({
         <KeyRound className="size-4" />
         Reset Password
       </Button>
-      {allowDelete && (
+      {allowToggleActive ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isToggling}
+          onClick={() => onToggleActive(user)}
+        >
+          {isToggling ? (
+            'Updating...'
+          ) : user.is_active ? (
+            <>
+              <UserX className="size-4" />
+              Deactivate
+            </>
+          ) : (
+            <>
+              <UserCheck className="size-4" />
+              Activate
+            </>
+          )}
+        </Button>
+      ) : null}
+      {allowDelete ? (
         <Button
           type="button"
           variant="outline"
@@ -72,7 +116,7 @@ function UserActions({
           <Trash2 className="size-4" />
           Delete
         </Button>
-      )}
+      ) : null}
       {isCurrentUser && (
         <p className="w-full text-right text-xs text-muted-foreground">
           Signed in as this user
@@ -87,13 +131,17 @@ function UserCard({
   currentUserId,
   onEdit,
   onResetPassword,
+  onToggleActive,
   onDelete,
+  togglingUserId,
 }: {
   user: UserProfile
   currentUserId?: string
   onEdit: (user: UserProfile) => void
   onResetPassword: (user: UserProfile) => void
+  onToggleActive: (user: UserProfile) => void
   onDelete: (user: UserProfile) => void
+  togglingUserId?: string | null
 }) {
   return (
     <div className="rounded-2xl border border-border/70 p-4">
@@ -124,7 +172,9 @@ function UserCard({
           currentUserId={currentUserId}
           onEdit={onEdit}
           onResetPassword={onResetPassword}
+          onToggleActive={onToggleActive}
           onDelete={onDelete}
+          togglingUserId={togglingUserId}
         />
       </div>
     </div>
@@ -136,7 +186,9 @@ export function UserTable({
   currentUserId,
   onEdit,
   onResetPassword,
+  onToggleActive,
   onDelete,
+  togglingUserId,
 }: UserTableProps) {
   if (users.length === 0) {
     return (
@@ -159,7 +211,9 @@ export function UserTable({
             currentUserId={currentUserId}
             onEdit={onEdit}
             onResetPassword={onResetPassword}
+            onToggleActive={onToggleActive}
             onDelete={onDelete}
+            togglingUserId={togglingUserId}
           />
         ))}
       </div>
@@ -202,7 +256,9 @@ export function UserTable({
                     currentUserId={currentUserId}
                     onEdit={onEdit}
                     onResetPassword={onResetPassword}
+                    onToggleActive={onToggleActive}
                     onDelete={onDelete}
+                    togglingUserId={togglingUserId}
                   />
                 </TableCell>
               </TableRow>

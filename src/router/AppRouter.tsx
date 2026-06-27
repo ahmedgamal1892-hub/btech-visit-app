@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminRoute, GuestRoute, ProtectedRoute } from '@/components/auth'
 import { AdminLayout } from '@/layouts'
 import {
+  AuditLogPage,
   DailyUploadPage,
   DashboardPage,
   LoginPage,
@@ -39,6 +40,7 @@ export function AppRouter() {
           <Route element={<AdminRoute />}>
             <Route path="/daily-upload" element={<DailyUploadPage />} />
             <Route path="/users" element={<UsersPage />} />
+            <Route path="/audit-log" element={<AuditLogPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>

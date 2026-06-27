@@ -43,9 +43,20 @@ export type UpdateUserInput = {
   isActive: boolean
 }
 
-export type ResetPasswordInput = {
+export type ResetPasswordInput =
+  | {
+      userId: string
+      mode: 'set'
+      password: string
+    }
+  | {
+      userId: string
+      mode: 'email'
+    }
+
+export type SetUserActiveInput = {
   userId: string
-  password: string
+  isActive: boolean
 }
 
 export type UserMutationResult =

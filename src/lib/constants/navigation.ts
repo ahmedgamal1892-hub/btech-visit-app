@@ -1,4 +1,5 @@
 import {
+  ClipboardList,
   History,
   LayoutDashboard,
   LogOut,
@@ -39,6 +40,12 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Users',
     href: '/users',
     icon: Users,
+    roles: ['Admin'],
+  },
+  {
+    title: 'Audit Log',
+    href: '/audit-log',
+    icon: ClipboardList,
     roles: ['Admin'],
   },
   {

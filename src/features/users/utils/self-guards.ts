@@ -1,5 +1,14 @@
 import type { UpdateUserInput } from '@/types/user'
 import type { UserRole } from '@/types/auth'
+import type { UserProfile } from '@/types/user'
+
+const DELETED_USER_USERNAME = 'deleted-user'
+
+export function isDeletedUserPlaceholder(
+  user: Pick<UserProfile, 'username'>,
+): boolean {
+  return user.username === DELETED_USER_USERNAME
+}
 
 export function validateSelfProfileEdit(
   currentUserId: string | undefined,
@@ -24,7 +33,22 @@ export function validateSelfProfileEdit(
 
 export function canDeleteUser(
   currentUserId: string | undefined,
-  targetUserId: string,
+  targetUser: Pick<UserProfile, 'id' | 'username'>,
 ): boolean {
-  return Boolean(currentUserId && currentUserId !== targetUserId)
+  if (isDeletedUserPlaceholder(targetUser)) {
+    return false
+  }
+
+  return Boolean(currentUserId && currentUserId !== targetUser.id)
+}
+
+export function canToggleUserActive(
+  currentUserId: string | undefined,
+  targetUser: Pick<UserProfile, 'id' | 'username'>,
+): boolean {
+  if (isDeletedUserPlaceholder(targetUser)) {
+    return false
+  }
+
+  return Boolean(currentUserId && currentUserId !== targetUser.id)
 }

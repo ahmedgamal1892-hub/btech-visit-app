@@ -5,11 +5,13 @@ import {
   deleteUser,
   fetchUsers,
   resetUserPassword,
+  setUserActive,
   updateUserProfile,
 } from '@/services/users'
 import type {
   CreateUserInput,
   ResetPasswordInput,
+  SetUserActiveInput,
   UpdateUserInput,
   UserListFilters,
 } from '@/types/user'
@@ -54,6 +56,17 @@ export function useUpdateUser() {
 export function useResetUserPassword() {
   return useMutation({
     mutationFn: (input: ResetPasswordInput) => resetUserPassword(input),
+  })
+}
+
+export function useSetUserActive() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: SetUserActiveInput) => setUserActive(input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] })
+    },
   })
 }
 

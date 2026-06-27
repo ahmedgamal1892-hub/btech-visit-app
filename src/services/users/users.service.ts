@@ -5,6 +5,7 @@ import { getSupabaseClient } from '@/services/supabase/client'
 import type {
   CreateUserInput,
   ResetPasswordInput,
+  SetUserActiveInput,
   UpdateUserInput,
   UserListFilters,
   UserListResult,
@@ -30,6 +31,10 @@ function mapMutationError(message: string): string {
 
   if (normalized.includes('password')) {
     return message
+  }
+
+  if (normalized.includes('last active admin')) {
+    return 'Cannot remove the last active Admin account.'
   }
 
   if (normalized.includes('edge function')) {
@@ -104,6 +109,7 @@ export async function fetchUsers(
   let query = supabase
     .from('profiles')
     .select(USER_PROFILE_COLUMNS, { count: 'exact' })
+    .neq('username', 'deleted-user')
 
   const search = filters.search.trim()
   if (search) {
@@ -151,15 +157,13 @@ export async function updateUserProfile(
 ): Promise<UserMutationResult> {
   const supabase = getSupabaseClient()
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      full_name: input.fullName.trim(),
-      phone: input.phone.trim() ? input.phone.trim() : null,
-      role: input.role,
-      is_active: input.isActive,
-    })
-    .eq('id', userId)
+  const { error } = await supabase.rpc('admin_update_user_profile', {
+    p_user_id: userId,
+    p_full_name: input.fullName.trim(),
+    p_phone: input.phone.trim(),
+    p_role: input.role,
+    p_is_active: input.isActive,
+  })
 
   if (error) {
     return {
@@ -168,7 +172,20 @@ export async function updateUserProfile(
     }
   }
 
-  return { success: true }
+  return setUserActive({
+    userId,
+    isActive: input.isActive,
+  })
+}
+
+export async function setUserActive(
+  input: SetUserActiveInput,
+): Promise<UserMutationResult> {
+  return invokeAdminUsers({
+    action: 'set_active',
+    userId: input.userId,
+    isActive: input.isActive,
+  })
 }
 
 export async function createUser(
@@ -188,6 +205,13 @@ export async function createUser(
 export async function resetUserPassword(
   input: ResetPasswordInput,
 ): Promise<UserMutationResult> {
+  if (input.mode === 'email') {
+    return invokeAdminUsers({
+      action: 'send_reset_email',
+      userId: input.userId,
+    })
+  }
+
   return invokeAdminUsers({
     action: 'reset_password',
     userId: input.userId,

@@ -1,6 +1,7 @@
 import type { AuthError } from '@supabase/supabase-js'
 
 import { resolveUsernameToEmail, validateSupabaseEnv } from '@/lib/env'
+import { logClientAuditEvent, getClientAuditContext } from '@/services/audit'
 import type { Profile, SignInResult } from '@/types/auth'
 import { getSupabaseClient } from '@/services/supabase/client'
 
@@ -69,11 +70,62 @@ export async function signInWithUsername(
     }
   }
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message: GENERIC_LOGIN_ERROR,
+    }
+  }
+
+  const profile = await fetchCurrentProfile(session.user.id)
+
+  if (!profile) {
+    await supabase.auth.signOut()
+    return {
+      success: false,
+      message: 'Your profile could not be loaded. Contact your administrator.',
+    }
+  }
+
+  if (!profile.is_active) {
+    await supabase.auth.signOut()
+    return {
+      success: false,
+      message:
+        'Your account is deactivated. Contact your administrator for access.',
+    }
+  }
+
+  await logClientAuditEvent({
+    action: 'User Login',
+    entityName: profile.username,
+    details: {
+      role: profile.role,
+    },
+    context: getClientAuditContext(),
+  })
+
   return { success: true }
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut(actorUsername?: string | null): Promise<void> {
   const supabase = getSupabaseClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (session?.user) {
+    await logClientAuditEvent({
+      action: 'User Logout',
+      entityName: actorUsername ?? session.user.email ?? null,
+      context: getClientAuditContext(),
+    })
+  }
+
   const { error } = await supabase.auth.signOut()
 
   if (error) {

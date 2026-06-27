@@ -18,6 +18,7 @@ import {
   useCreateUser,
   useDeleteUser,
   useResetUserPassword,
+  useSetUserActive,
   useUpdateUser,
   useUsers,
 } from '@/features/users/hooks'
@@ -66,7 +67,9 @@ export function UsersPage() {
   const createUserMutation = useCreateUser()
   const updateUserMutation = useUpdateUser()
   const resetPasswordMutation = useResetUserPassword()
+  const setUserActiveMutation = useSetUserActive()
   const deleteUserMutation = useDeleteUser()
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null)
 
   const paginationLabel = useMemo(() => {
     if (!data || data.totalCount === 0) {
@@ -182,6 +185,7 @@ export function UsersPage() {
 
     const result = await resetPasswordMutation.mutateAsync({
       userId: resetUser.id,
+      mode: 'set',
       password: values.password,
     })
 
@@ -202,12 +206,71 @@ export function UsersPage() {
     setResetUser(null)
   }
 
+  const handleSendResetEmail = async () => {
+    if (!resetUser) {
+      return
+    }
+
+    const result = await resetPasswordMutation.mutateAsync({
+      userId: resetUser.id,
+      mode: 'email',
+    })
+
+    if (!result.success) {
+      toast({
+        variant: 'error',
+        title: 'Could not send reset email',
+        description: result.message,
+      })
+      return
+    }
+
+    toast({
+      variant: 'success',
+      title: 'Reset email sent',
+      description: `A password reset link was sent for ${resetUser.username}.`,
+    })
+    setResetUser(null)
+  }
+
+  const handleToggleActive = async (targetUser: UserProfile) => {
+    setTogglingUserId(targetUser.id)
+
+    try {
+      const result = await setUserActiveMutation.mutateAsync({
+        userId: targetUser.id,
+        isActive: !targetUser.is_active,
+      })
+
+      if (!result.success) {
+        toast({
+          variant: 'error',
+          title: targetUser.is_active
+            ? 'Deactivation failed'
+            : 'Activation failed',
+          description: result.message,
+        })
+        return
+      }
+
+      toast({
+        variant: 'success',
+        title: targetUser.is_active ? 'User deactivated' : 'User activated',
+        description: `${targetUser.username} is now ${
+          targetUser.is_active ? 'inactive' : 'active'
+        }.`,
+      })
+    } finally {
+      setTogglingUserId(null)
+    }
+  }
+
   const handleDeleteUser = async () => {
     if (!deleteTarget) {
       return
     }
 
-    if (!canDeleteUser(user?.id, deleteTarget.id)) {
+    if (!canDeleteUser(user?.id, deleteTarget)) {
       toast({
         variant: 'error',
         title: 'Delete not allowed',
@@ -304,7 +367,11 @@ export function UsersPage() {
                 currentUserId={user?.id}
                 onEdit={setEditingUser}
                 onResetPassword={setResetUser}
+                onToggleActive={(targetUser) =>
+                  void handleToggleActive(targetUser)
+                }
                 onDelete={setDeleteTarget}
+                togglingUserId={togglingUserId}
               />
 
               <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -379,7 +446,9 @@ export function UsersPage() {
           }
         }}
         onSubmit={handleResetPassword}
+        onSendResetEmail={handleSendResetEmail}
         isSubmitting={resetPasswordMutation.isPending}
+        isSendingEmail={resetPasswordMutation.isPending}
       />
 
       <DeleteUserDialog

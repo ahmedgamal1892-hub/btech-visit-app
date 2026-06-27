@@ -135,10 +135,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 
   const signOut = useCallback(async () => {
-    await signOutUser()
+    await signOutUser(profile?.username ?? null)
     setUser(null)
     setProfile(null)
-  }, [])
+  }, [profile?.username])
 
   const refreshProfile = useCallback(async () => {
     if (!user) {

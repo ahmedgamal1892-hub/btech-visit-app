@@ -1,5 +1,6 @@
 export * from './supabase'
 export * from './auth'
+export * from './audit'
 export * from './users'
 export * from './import'
 export * from './visits'

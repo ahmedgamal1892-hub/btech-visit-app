@@ -34,7 +34,8 @@ export function DeleteUserDialog({
           <DialogDescription>
             This permanently removes{' '}
             <span className="font-medium">{user?.username}</span> from Supabase
-            Auth and deletes their profile. This action cannot be undone.
+            Auth and deletes their profile. Historical visits will remain and
+            appear under &quot;Deleted User&quot;. This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
