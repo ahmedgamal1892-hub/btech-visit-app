@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -19,6 +19,8 @@ export function RankingCategoryFilter({
   disabled = false,
   isLoading = false,
 }: RankingCategoryFilterProps) {
+  const [clearSearchTrigger, setClearSearchTrigger] = useState(0)
+
   const options = useMemo(
     () =>
       categories.map((category) => ({
@@ -40,6 +42,7 @@ export function RankingCategoryFilter({
 
   function handleClearAll() {
     onChange([])
+    setClearSearchTrigger((current) => current + 1)
   }
 
   return (
@@ -87,6 +90,7 @@ export function RankingCategoryFilter({
         disabled={isDisabled}
         clearable
         showCheckboxes
+        clearSearchTrigger={clearSearchTrigger}
         emptyMessage="No categories found"
         aria-label="Select categories"
       />

@@ -28,6 +28,7 @@ type SearchableMultiComboboxProps = {
   showCheckboxes?: boolean
   emptyMessage?: string
   className?: string
+  clearSearchTrigger?: number
   'aria-label'?: string
 }
 
@@ -57,6 +58,7 @@ export function SearchableMultiCombobox({
   showCheckboxes = false,
   emptyMessage = 'No results found',
   className,
+  clearSearchTrigger,
   'aria-label': ariaLabel,
 }: SearchableMultiComboboxProps) {
   const listboxId = useId()
@@ -106,6 +108,18 @@ export function SearchableMultiCombobox({
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [])
 
+  useEffect(() => {
+    if (clearSearchTrigger === undefined) {
+      return
+    }
+
+    if (clearSearchTrigger === 0) {
+      return
+    }
+
+    setQuery('')
+  }, [clearSearchTrigger])
+
   function openList() {
     if (disabled) {
       return
@@ -123,8 +137,6 @@ export function SearchableMultiCombobox({
         ? value.filter((selectedValue) => selectedValue !== option.value)
         : [...value, option.value],
     )
-    setQuery('')
-    setHighlightedIndex(0)
     inputRef.current?.focus()
   }
 
