@@ -6,6 +6,7 @@ import {
   LogOut,
   MapPinPlus,
   Settings,
+  Trophy,
   Upload,
   Users,
 } from 'lucide-react'
@@ -40,6 +41,11 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Reports',
     href: '/reports',
     icon: FileBarChart,
+  },
+  {
+    title: 'Ranking',
+    href: '/ranking',
+    icon: Trophy,
   },
   {
     title: 'Users',

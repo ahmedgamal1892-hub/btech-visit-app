@@ -5,7 +5,6 @@ export const DISPLAY_REQUIRED_COLUMNS = [
   'Item Code',
   'Product Name',
   'Display Qty',
-  'Status',
 ] as const
 
 export const DISPLAY_OPTIONAL_COLUMNS = ['Budget Channel'] as const
@@ -18,6 +17,14 @@ export const ACH_REQUIRED_COLUMNS = [
   'ACH Percent',
 ] as const
 
+export const RANKING_REQUIRED_COLUMNS = [
+  'Store',
+  'Brand',
+  'Category',
+  'Qty',
+  'Sales',
+] as const
+
 const DISPLAY_ALIASES: Record<string, string[]> = {
   'Store Name': ['store name', 'storename', 'store'],
   Brand: ['brand'],
@@ -26,7 +33,6 @@ const DISPLAY_ALIASES: Record<string, string[]> = {
   'Product Name': ['product name', 'productname', 'product'],
   'Display Qty': ['display qty', 'displayqty', 'qty', 'quantity'],
   'Budget Channel': ['budget channel', 'budgetchannel', 'channel'],
-  Status: ['status', 'product status', 'display status'],
 }
 
 const ACH_ALIASES: Record<string, string[]> = {
@@ -42,6 +48,14 @@ const ACH_ALIASES: Record<string, string[]> = {
     'achievement',
     'achievement %',
   ],
+}
+
+const RANKING_ALIASES: Record<string, string[]> = {
+  Store: ['store', 'store name', 'storename', 'branch', 'branch name', 'branchname'],
+  Brand: ['brand'],
+  Category: ['category'],
+  Qty: ['qty', 'quantity'],
+  Sales: ['sales', 'net sales', 'netsales', 'sales value'],
 }
 
 export function normalizeHeader(value: string): string {
@@ -110,6 +124,26 @@ export function mapAchHeaders(
   return mapping
 }
 
+export function mapRankingHeaders(
+  headers: string[],
+): Record<string, number> | null {
+  const mapping: Record<string, number> = {}
+
+  for (const required of RANKING_REQUIRED_COLUMNS) {
+    const index = headers.findIndex((header) =>
+      matchesAlias(header, RANKING_ALIASES[required]),
+    )
+
+    if (index === -1) {
+      return null
+    }
+
+    mapping[required] = index
+  }
+
+  return mapping
+}
+
 export function getMissingDisplayColumns(headers: string[]): string[] {
   return DISPLAY_REQUIRED_COLUMNS.filter((column) => {
     const index = headers.findIndex((header) =>
@@ -123,6 +157,15 @@ export function getMissingAchColumns(headers: string[]): string[] {
   return ACH_REQUIRED_COLUMNS.filter((column) => {
     const index = headers.findIndex((header) =>
       matchesAlias(header, ACH_ALIASES[column]),
+    )
+    return index === -1
+  })
+}
+
+export function getMissingRankingColumns(headers: string[]): string[] {
+  return RANKING_REQUIRED_COLUMNS.filter((column) => {
+    const index = headers.findIndex((header) =>
+      matchesAlias(header, RANKING_ALIASES[column]),
     )
     return index === -1
   })

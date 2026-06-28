@@ -216,8 +216,7 @@ BEGIN
       sub_category,
       item_code,
       product_name,
-      display_qty,
-      display_status
+      display_qty
     )
     VALUES (
       v_new_batch_id,
@@ -226,8 +225,7 @@ BEGIN
       trim(v_display_row ->> 'sub_category'),
       trim(v_display_row ->> 'item_code'),
       trim(v_display_row ->> 'product_name'),
-      COALESCE((v_display_row ->> 'display_qty')::INTEGER, 0),
-      NULLIF(trim(v_display_row ->> 'display_status'), '')
+      COALESCE((v_display_row ->> 'display_qty')::INTEGER, 0)
     );
   END LOOP;
 

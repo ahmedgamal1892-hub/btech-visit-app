@@ -19,6 +19,7 @@ type ExcelUploadCardProps = {
   allowedExtensions: string[]
   errors: ImportValidationError[]
   disabled?: boolean
+  uploadButtonLabel?: string
   onFileSelect: (file: File) => void
   onClear: () => void
 }
@@ -30,6 +31,7 @@ export function ExcelUploadCard({
   allowedExtensions,
   errors,
   disabled = false,
+  uploadButtonLabel = 'Choose File',
   onFileSelect,
   onClear,
 }: ExcelUploadCardProps) {
@@ -104,7 +106,7 @@ export function ExcelUploadCard({
             disabled={disabled}
             onClick={() => inputRef.current?.click()}
           >
-            Choose File
+            {uploadButtonLabel}
           </Button>
           <input
             ref={inputRef}

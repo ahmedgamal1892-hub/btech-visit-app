@@ -3,17 +3,28 @@ import * as XLSX from 'xlsx'
 import {
   getMissingAchColumns,
   getMissingDisplayColumns,
+  getMissingRankingColumns,
   mapAchHeaders,
   mapDisplayHeaders,
+  mapRankingHeaders,
 } from '@/lib/import/columns'
-import { normalizeDisplayFileStatus } from '@/lib/import/display-status'
 import type {
   ImportValidationError,
   ParsedAchSheet,
+  ParsedDailyWorkbook,
   ParsedDisplaySheet,
+  ParsedRankingSheet,
+  ParsedSheetResult,
+  RankingPayload,
   SalesAchievementPayload,
   StoreDisplayPayload,
 } from '@/types/import'
+
+export const DAILY_SHEET_NAMES = {
+  display: 'Display',
+  ach: 'ACH',
+  ranking: 'Ranking',
+} as const
 
 function cellValue(row: unknown[], index: number): string {
   const value = row[index]
@@ -43,14 +54,13 @@ function parseInteger(value: string, fallback = 0): number {
   return Math.trunc(parsed)
 }
 
-function readSheetRows(workbook: XLSX.WorkBook): unknown[][] {
-  const sheetName = workbook.SheetNames[0]
+function readSheetRows(workbook: XLSX.WorkBook, sheetName: string): unknown[][] {
+  const sheet = workbook.Sheets[sheetName]
 
-  if (!sheetName) {
+  if (!sheet) {
     return []
   }
 
-  const sheet = workbook.Sheets[sheetName]
   return XLSX.utils.sheet_to_json<unknown[]>(sheet, {
     header: 1,
     defval: '',
@@ -58,12 +68,31 @@ function readSheetRows(workbook: XLSX.WorkBook): unknown[][] {
   })
 }
 
-export function parseDisplayWorkbook(buffer: ArrayBuffer): {
+export function findWorksheetByName(
+  workbook: XLSX.WorkBook,
+  expectedName: string,
+): string | null {
+  const normalizedExpected = expectedName.trim().toLowerCase()
+
+  return (
+    workbook.SheetNames.find(
+      (sheetName) => sheetName.trim().toLowerCase() === normalizedExpected,
+    ) ?? null
+  )
+}
+
+function missingSheetResult<T>(): ParsedSheetResult<T> {
+  return {
+    sheetStatus: 'missing',
+    data: null,
+    errors: [],
+  }
+}
+
+function parseDisplayRows(rows: unknown[][]): {
   data: ParsedDisplaySheet | null
   errors: ImportValidationError[]
 } {
-  const workbook = XLSX.read(buffer, { type: 'array' })
-  const rows = readSheetRows(workbook)
   const errors: ImportValidationError[] = []
 
   if (rows.length === 0) {
@@ -72,7 +101,7 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       errors: [
         {
           sheet: 'display',
-          message: 'The Display Excel file is empty.',
+          message: 'The Display worksheet is empty.',
         },
       ],
     }
@@ -117,7 +146,6 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
     const itemCode = cellValue(row, mapping['Item Code'])
     const productName = cellValue(row, mapping['Product Name'])
     const displayQtyRaw = cellValue(row, mapping['Display Qty'])
-    const statusRaw = cellValue(row, mapping.Status)
 
     if (
       !storeName &&
@@ -125,8 +153,7 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       !subCategory &&
       !itemCode &&
       !productName &&
-      !displayQtyRaw &&
-      !statusRaw
+      !displayQtyRaw
     ) {
       continue
     }
@@ -188,25 +215,6 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       })
     }
 
-    if (!statusRaw) {
-      errors.push({
-        sheet: 'display',
-        row: excelRow,
-        column: 'Status',
-        message: 'Status is required.',
-      })
-    }
-
-    const displayStatus = normalizeDisplayFileStatus(statusRaw)
-    if (statusRaw && !displayStatus) {
-      errors.push({
-        sheet: 'display',
-        row: excelRow,
-        column: 'Status',
-        message: 'Status must be Display, Delisted, or Dead.',
-      })
-    }
-
     if (mapping['Budget Channel'] !== undefined) {
       const budgetChannel = cellValue(row, mapping['Budget Channel'])
       if (budgetChannel && storeName) {
@@ -218,10 +226,6 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       continue
     }
 
-    if (!displayStatus) {
-      continue
-    }
-
     parsedRows.push({
       store_name: storeName,
       brand,
@@ -229,7 +233,6 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
       item_code: itemCode,
       product_name: productName,
       display_qty: displayQty,
-      display_status: displayStatus,
     })
   }
 
@@ -247,12 +250,10 @@ export function parseDisplayWorkbook(buffer: ArrayBuffer): {
   }
 }
 
-export function parseAchWorkbook(buffer: ArrayBuffer): {
+function parseAchRows(rows: unknown[][]): {
   data: ParsedAchSheet | null
   errors: ImportValidationError[]
 } {
-  const workbook = XLSX.read(buffer, { type: 'array' })
-  const rows = readSheetRows(workbook)
   const errors: ImportValidationError[] = []
 
   if (rows.length === 0) {
@@ -261,7 +262,7 @@ export function parseAchWorkbook(buffer: ArrayBuffer): {
       errors: [
         {
           sheet: 'ach',
-          message: 'The Sales Achievement Excel file is empty.',
+          message: 'The ACH worksheet is empty.',
         },
       ],
     }
@@ -289,7 +290,7 @@ export function parseAchWorkbook(buffer: ArrayBuffer): {
       errors: [
         {
           sheet: 'ach',
-          message: 'Unable to map Sales Achievement worksheet columns.',
+          message: 'Unable to map ACH worksheet columns.',
         },
       ],
     }
@@ -382,7 +383,7 @@ export function parseAchWorkbook(buffer: ArrayBuffer): {
   if (parsedRows.length === 0 && errors.length === 0) {
     errors.push({
       sheet: 'ach',
-      message: 'No data rows were found in the Sales Achievement worksheet.',
+      message: 'No data rows were found in the ACH worksheet.',
     })
   }
 
@@ -390,6 +391,233 @@ export function parseAchWorkbook(buffer: ArrayBuffer): {
     data: errors.length === 0 ? { rows: parsedRows } : null,
     errors,
   }
+}
+
+function parseRankingRows(rows: unknown[][]): {
+  data: ParsedRankingSheet | null
+  errors: ImportValidationError[]
+} {
+  const errors: ImportValidationError[] = []
+
+  if (rows.length === 0) {
+    return {
+      data: null,
+      errors: [
+        {
+          sheet: 'ranking',
+          message: 'The Ranking worksheet is empty.',
+        },
+      ],
+    }
+  }
+
+  const headers = (rows[0] ?? []).map((cell) => String(cell ?? '').trim())
+  const missingColumns = getMissingRankingColumns(headers)
+
+  if (missingColumns.length > 0) {
+    return {
+      data: null,
+      errors: missingColumns.map((column) => ({
+        sheet: 'ranking',
+        column,
+        message: `Missing required column: ${column}`,
+      })),
+    }
+  }
+
+  const mapping = mapRankingHeaders(headers)
+
+  if (!mapping) {
+    return {
+      data: null,
+      errors: [
+        {
+          sheet: 'ranking',
+          message: 'Unable to map Ranking worksheet columns.',
+        },
+      ],
+    }
+  }
+
+  const parsedRows: RankingPayload[] = []
+
+  for (let index = 1; index < rows.length; index += 1) {
+    const row = rows[index] ?? []
+    const storeName = cellValue(row, mapping.Store)
+    const brand = cellValue(row, mapping.Brand)
+    const category = cellValue(row, mapping.Category)
+    const qtyRaw = cellValue(row, mapping.Qty)
+    const salesRaw = cellValue(row, mapping.Sales)
+
+    if (!storeName && !brand && !category && !qtyRaw && !salesRaw) {
+      continue
+    }
+
+    const excelRow = index + 1
+
+    if (!storeName) {
+      errors.push({
+        sheet: 'ranking',
+        row: excelRow,
+        column: 'Store',
+        message: 'Store is required.',
+      })
+    }
+
+    if (!brand) {
+      errors.push({
+        sheet: 'ranking',
+        row: excelRow,
+        column: 'Brand',
+        message: 'Brand is required.',
+      })
+    }
+
+    if (!category) {
+      errors.push({
+        sheet: 'ranking',
+        row: excelRow,
+        column: 'Category',
+        message: 'Category is required.',
+      })
+    }
+
+    const qty = parseInteger(qtyRaw, 0)
+    const sales = parseNumber(salesRaw, 0)
+
+    if (Number.isNaN(qty)) {
+      errors.push({
+        sheet: 'ranking',
+        row: excelRow,
+        column: 'Qty',
+        message: 'Qty must be a valid number.',
+      })
+    }
+
+    if (Number.isNaN(sales)) {
+      errors.push({
+        sheet: 'ranking',
+        row: excelRow,
+        column: 'Sales',
+        message: 'Sales must be a valid number.',
+      })
+    }
+
+    if (errors.some((error) => error.row === excelRow)) {
+      continue
+    }
+
+    parsedRows.push({
+      store_name: storeName,
+      brand,
+      category,
+      qty,
+      sales,
+    })
+  }
+
+  if (parsedRows.length === 0 && errors.length === 0) {
+    errors.push({
+      sheet: 'ranking',
+      message: 'No data rows were found in the Ranking worksheet.',
+    })
+  }
+
+  return {
+    data: errors.length === 0 ? { rows: parsedRows } : null,
+    errors,
+  }
+}
+
+function parseNamedSheet<T>(
+  workbook: XLSX.WorkBook,
+  sheetName: string,
+  sheetKey: 'display' | 'ach' | 'ranking',
+  parser: (rows: unknown[][]) => {
+    data: T | null
+    errors: ImportValidationError[]
+  },
+): ParsedSheetResult<T> {
+  const resolvedSheetName = findWorksheetByName(workbook, sheetName)
+
+  if (!resolvedSheetName) {
+    return missingSheetResult<T>()
+  }
+
+  const parsed = parser(readSheetRows(workbook, resolvedSheetName))
+
+  return {
+    sheetStatus: 'found',
+    data: parsed.data,
+    errors: parsed.errors.map((error) => ({
+      ...error,
+      sheet: sheetKey,
+    })),
+  }
+}
+
+export function parseDailyWorkbook(buffer: ArrayBuffer): ParsedDailyWorkbook {
+  const workbook = XLSX.read(buffer, { type: 'array' })
+
+  return {
+    display: parseNamedSheet(
+      workbook,
+      DAILY_SHEET_NAMES.display,
+      'display',
+      parseDisplayRows,
+    ),
+    ach: parseNamedSheet(workbook, DAILY_SHEET_NAMES.ach, 'ach', parseAchRows),
+    ranking: parseNamedSheet(
+      workbook,
+      DAILY_SHEET_NAMES.ranking,
+      'ranking',
+      parseRankingRows,
+    ),
+  }
+}
+
+export function parseDisplayWorkbook(buffer: ArrayBuffer): {
+  data: ParsedDisplaySheet | null
+  errors: ImportValidationError[]
+} {
+  const workbook = XLSX.read(buffer, { type: 'array' })
+  const sheetName = workbook.SheetNames[0]
+
+  if (!sheetName) {
+    return {
+      data: null,
+      errors: [
+        {
+          sheet: 'display',
+          message: 'The Display Excel file is empty.',
+        },
+      ],
+    }
+  }
+
+  return parseDisplayRows(readSheetRows(workbook, sheetName))
+}
+
+export function parseAchWorkbook(buffer: ArrayBuffer): {
+  data: ParsedAchSheet | null
+  errors: ImportValidationError[]
+} {
+  const workbook = XLSX.read(buffer, { type: 'array' })
+  const sheetName = workbook.SheetNames[0]
+
+  if (!sheetName) {
+    return {
+      data: null,
+      errors: [
+        {
+          sheet: 'ach',
+          message: 'The Sales Achievement Excel file is empty.',
+        },
+      ],
+    }
+  }
+
+  return parseAchRows(readSheetRows(workbook, sheetName))
 }
 
 export function isAllowedExcelFile(

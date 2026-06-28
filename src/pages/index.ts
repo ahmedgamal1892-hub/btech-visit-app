@@ -1,3 +1,4 @@
+export { RankingPage } from './RankingPage'
 export { ReportsPage } from './ReportsPage'
 export { AuditLogPage } from './AuditLogPage'
 export { DailyUploadPage } from './DailyUploadPage'

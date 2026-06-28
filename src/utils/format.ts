@@ -20,6 +20,36 @@ export function formatNumberWithSeparators(value: number): string {
   return numberFormatter.format(value)
 }
 
+function formatCompactMagnitude(
+  absValue: number,
+  divisor: number,
+  suffix: string,
+): string {
+  const scaled = absValue / divisor
+  return `${scaled.toFixed(1).replace(/\.0$/, '')}${suffix}`
+}
+
+export function formatCompactNumber(value: number): string {
+  const absValue = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+
+  if (absValue >= 1_000_000_000) {
+    return `${sign}${formatCompactMagnitude(absValue, 1_000_000_000, 'B')}`
+  }
+
+  if (absValue >= 1_000_000) {
+    return `${sign}${formatCompactMagnitude(absValue, 1_000_000, 'M')}`
+  }
+
+  if (absValue >= 1_000) {
+    return `${sign}${formatCompactMagnitude(absValue, 1_000, 'K')}`
+  }
+
+  return formatNumberWithSeparators(value)
+}
+
+export const formatCurrencyCompact = formatCompactNumber
+
 export function formatAchievementPercent(value: number): string {
   return `${percentFormatter.format(value)}%`
 }

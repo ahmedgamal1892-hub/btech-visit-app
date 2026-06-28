@@ -1,20 +1,4 @@
--- Add Display file Status column to store_display and persist it on snapshot import.
-
-ALTER TABLE public.store_display
-  ADD COLUMN IF NOT EXISTS display_status TEXT;
-
-ALTER TABLE public.store_display
-  DROP CONSTRAINT IF EXISTS store_display_display_status_check;
-
-ALTER TABLE public.store_display
-  ADD CONSTRAINT store_display_display_status_check
-  CHECK (
-    display_status IS NULL
-    OR display_status IN ('Display', 'Delisted', 'Dead')
-  );
-
-COMMENT ON COLUMN public.store_display.display_status IS
-  'Product status from the Display Excel import (Display, Delisted, or Dead).';
+-- Historical migration retained for confirm_snapshot_import rollout.
 
 CREATE OR REPLACE FUNCTION public.confirm_snapshot_import(
   p_uploaded_by         UUID,
@@ -187,8 +171,7 @@ BEGIN
       sub_category,
       item_code,
       product_name,
-      display_qty,
-      display_status
+      display_qty
     )
     VALUES (
       v_new_batch_id,
@@ -197,8 +180,7 @@ BEGIN
       trim(v_display_row ->> 'sub_category'),
       trim(v_display_row ->> 'item_code'),
       trim(v_display_row ->> 'product_name'),
-      COALESCE((v_display_row ->> 'display_qty')::INTEGER, 0),
-      NULLIF(trim(v_display_row ->> 'display_status'), '')
+      COALESCE((v_display_row ->> 'display_qty')::INTEGER, 0)
     );
   END LOOP;
 

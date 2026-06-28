@@ -138,7 +138,7 @@ export async function loadBranchProducts(
     throw new Error(error.message)
   }
 
-  const products = mapBranchProducts(data ?? [], { includeStatus: false })
+  const products = mapBranchProducts(data ?? [])
 
   console.log('[branch product load evidence]', {
     selectedBranchName: debugBranchName ?? null,
@@ -152,7 +152,7 @@ export async function loadBranchProducts(
     return products
   }
 
-  return mergeDisplayStatusWhenColumnExists(supabase, resolvedStoreId, products)
+  return products
 }
 
 /**
@@ -274,62 +274,8 @@ async function storeHasDisplayProducts(
   return (count ?? 0) > 0
 }
 
-async function mergeDisplayStatusWhenColumnExists(
-  supabase: ReturnType<typeof getSupabaseClient>,
-  storeId: string,
-  products: BranchProduct[],
-): Promise<BranchProduct[]> {
-  logStoreDisplayPostgrestRequest({
-    caller: 'mergeDisplayStatusWhenColumnExists',
-    method: 'GET',
-    select: '*',
-    filters: {
-      store_id: `eq.${storeId}`,
-    },
-  })
-
-  const { data: fullRows, error } = await supabase
-    .from('store_display')
-    .select('*')
-    .eq('store_id', storeId)
-
-  if (error || !fullRows?.length) {
-    return products
-  }
-
-  const firstRow = fullRows[0] as Record<string, unknown>
-  if (!Object.prototype.hasOwnProperty.call(firstRow, 'display_status')) {
-    return products
-  }
-
-  const statusById = new Map(
-    fullRows.map((row) => [
-      String(row.id),
-      normalizeDisplayStatus(
-        (row as Record<string, unknown>).display_status,
-      ),
-    ]),
-  )
-
-  return products.map((product) => ({
-    ...product,
-    display_status: statusById.get(product.id) ?? null,
-  }))
-}
-
-function normalizeDisplayStatus(
-  value: unknown,
-): BranchProduct['display_status'] {
-  if (value === 'Display' || value === 'Delisted' || value === 'Dead') {
-    return value
-  }
-
-  return null
-}
-
 function mapBranchProducts(
   rows: Array<Record<string, unknown>>,
-  options: { includeStatus?: boolean } = { includeStatus: true },
 ): BranchProduct[] {
   return rows.map((row) => ({
     id: String(row.id),
@@ -339,10 +285,6 @@ function mapBranchProducts(
     item_code: String(row.item_code),
     product_name: String(row.product_name),
     display_qty: Number(row.display_qty),
-    display_status:
-      options.includeStatus === false
-        ? null
-        : normalizeDisplayStatus(row.display_status),
   }))
 }
 

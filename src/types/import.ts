@@ -9,8 +9,10 @@ export type ImportBatch = {
   is_current: boolean
   display_row_count: number | null
   ach_row_count: number | null
+  ranking_row_count: number | null
   display_hash: string | null
   ach_hash: string | null
+  ranking_hash: string | null
   validation_report: Record<string, unknown> | null
   confirmed_at: string | null
   created_at: string
@@ -28,7 +30,6 @@ export type StoreDisplayPayload = {
   item_code: string
   product_name: string
   display_qty: number
-  display_status: 'Display' | 'Delisted' | 'Dead'
 }
 
 export type SalesAchievementPayload = {
@@ -39,8 +40,18 @@ export type SalesAchievementPayload = {
   ach_percent: number
 }
 
+export type RankingPayload = {
+  store_name: string
+  brand: string
+  category: string
+  qty: number
+  sales: number
+}
+
+export type ImportSheetName = 'display' | 'ach' | 'ranking' | 'general'
+
 export type ImportValidationError = {
-  sheet: 'display' | 'ach' | 'general'
+  sheet: ImportSheetName
   row?: number
   column?: string
   message: string
@@ -55,11 +66,40 @@ export type ParsedAchSheet = {
   rows: SalesAchievementPayload[]
 }
 
+export type ParsedRankingSheet = {
+  rows: RankingPayload[]
+}
+
+export type ParsedSheetResult<T> = {
+  sheetStatus: 'found' | 'missing'
+  data: T | null
+  errors: ImportValidationError[]
+}
+
+export type ParsedDailyWorkbook = {
+  display: ParsedSheetResult<ParsedDisplaySheet>
+  ach: ParsedSheetResult<ParsedAchSheet>
+  ranking: ParsedSheetResult<ParsedRankingSheet>
+}
+
 export type ImportPreviewStats = {
   displayRowCount: number
   achRowCount: number
+  rankingRowCount: number
   storeCount: number
   productCount: number
+}
+
+export type ImportSheetSummaryStatus =
+  | { state: 'imported'; rowCount: number }
+  | { state: 'not_found' }
+  | { state: 'skipped' }
+  | { state: 'validation_errors'; errorCount: number }
+
+export type ImportSheetSummary = {
+  display: ImportSheetSummaryStatus
+  ach: ImportSheetSummaryStatus
+  ranking: ImportSheetSummaryStatus
 }
 
 export type ImportValidationResult = {
@@ -69,6 +109,13 @@ export type ImportValidationResult = {
   stores: StorePayload[]
   storeDisplay: StoreDisplayPayload[]
   salesAchievement: SalesAchievementPayload[]
+  ranking: RankingPayload[]
+  importFlags: {
+    display: boolean
+    ach: boolean
+    ranking: boolean
+  }
+  sheetSummary: ImportSheetSummary | null
 }
 
 export type ImportSettings = {

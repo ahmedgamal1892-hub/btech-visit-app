@@ -1,5 +1,3 @@
-import type { DisplayFileStatus } from '@/lib/import/display-status'
-
 export type StoreBranch = {
   id: string
   name: string
@@ -14,7 +12,6 @@ export type BranchProduct = {
   item_code: string
   product_name: string
   display_qty: number
-  display_status: DisplayFileStatus | null
 }
 
 export type BranchBrandPerformanceRow = {

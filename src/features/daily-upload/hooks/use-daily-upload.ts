@@ -28,19 +28,7 @@ export function useDashboardStats() {
   })
 }
 
-type ConfirmImportInput = {
-  uploadedBy: string
-  displayFileName: string
-  achFileName: string
-  displayHash: string
-  achHash: string
-  validationReport: Record<string, unknown>
-  stores: Parameters<typeof confirmSnapshotImport>[0]['stores']
-  storeDisplay: Parameters<typeof confirmSnapshotImport>[0]['storeDisplay']
-  salesAchievement: Parameters<
-    typeof confirmSnapshotImport
-  >[0]['salesAchievement']
-}
+type ConfirmImportInput = Parameters<typeof confirmSnapshotImport>[0]
 
 export function useConfirmImport() {
   const queryClient = useQueryClient()
@@ -59,10 +47,10 @@ export function useLogFailedImport() {
   return useMutation({
     mutationFn: (input: {
       uploadedBy: string
-      displayFileName: string
-      achFileName: string
-      displayHash?: string
-      achHash?: string
+      fileName: string
+      displayHash?: string | null
+      achHash?: string | null
+      rankingHash?: string | null
       validationErrors: ImportValidationError[]
       errorLog?: Record<string, unknown>
     }) => logFailedImport(input),

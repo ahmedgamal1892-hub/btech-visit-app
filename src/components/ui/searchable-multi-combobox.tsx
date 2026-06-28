@@ -12,23 +12,22 @@ import {
   ComboboxDropdownPortal,
   isComboboxDropdownTarget,
 } from '@/components/ui/combobox-dropdown-portal'
-import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 
-export type SearchableComboboxOption = {
-  value: string
-  label: string
-}
+import type { SearchableComboboxOption } from './searchable-combobox'
 
-type SearchableComboboxProps = {
+type SearchableMultiComboboxProps = {
   id?: string
   options: SearchableComboboxOption[]
-  value: string
-  onChange: (value: string) => void
+  value: string[]
+  onChange: (value: string[]) => void
   placeholder?: string
   disabled?: boolean
   clearable?: boolean
+  showCheckboxes?: boolean
   emptyMessage?: string
+  className?: string
   'aria-label'?: string
 }
 
@@ -47,7 +46,7 @@ function filterOptions(
   )
 }
 
-export function SearchableCombobox({
+export function SearchableMultiCombobox({
   id,
   options,
   value,
@@ -55,9 +54,11 @@ export function SearchableCombobox({
   placeholder = 'Search...',
   disabled = false,
   clearable = false,
+  showCheckboxes = false,
   emptyMessage = 'No results found',
+  className,
   'aria-label': ariaLabel,
-}: SearchableComboboxProps) {
+}: SearchableMultiComboboxProps) {
   const listboxId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
@@ -68,22 +69,22 @@ export function SearchableCombobox({
   const [query, setQuery] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
 
-  const selectedOption = options.find((option) => option.value === value)
+  const selectedOptions = useMemo(
+    () =>
+      value
+        .map((selectedValue) =>
+          options.find((option) => option.value === selectedValue),
+        )
+        .filter((option): option is SearchableComboboxOption => Boolean(option)),
+    [options, value],
+  )
 
   const filteredOptions = useMemo(
     () => filterOptions(options, query),
     [options, query],
   )
 
-  const displayValue = isOpen ? query : (selectedOption?.label ?? '')
-  const showClear = clearable && !disabled && Boolean(value)
-
-  function clearSelection() {
-    onChange('')
-    setQuery('')
-    setIsOpen(false)
-    inputRef.current?.blur()
-  }
+  const showClearAll = clearable && !disabled && value.length > 0
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -98,6 +99,7 @@ export function SearchableCombobox({
       }
 
       setIsOpen(false)
+      setQuery('')
     }
 
     document.addEventListener('mousedown', handlePointerDown)
@@ -110,15 +112,31 @@ export function SearchableCombobox({
     }
 
     setIsOpen(true)
-    setQuery('')
     setHighlightedIndex(0)
   }
 
-  function selectOption(option: SearchableComboboxOption) {
-    onChange(option.value)
+  function toggleOption(option: SearchableComboboxOption) {
+    const isSelected = value.includes(option.value)
+
+    onChange(
+      isSelected
+        ? value.filter((selectedValue) => selectedValue !== option.value)
+        : [...value, option.value],
+    )
     setQuery('')
-    setIsOpen(false)
-    inputRef.current?.blur()
+    setHighlightedIndex(0)
+    inputRef.current?.focus()
+  }
+
+  function removeValue(optionValue: string) {
+    onChange(value.filter((selectedValue) => selectedValue !== optionValue))
+    inputRef.current?.focus()
+  }
+
+  function clearAll() {
+    onChange([])
+    setQuery('')
+    inputRef.current?.focus()
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -159,7 +177,7 @@ export function SearchableCombobox({
 
       const option = filteredOptions[highlightedIndex]
       if (option) {
-        selectOption(option)
+        toggleOption(option)
       }
       return
     }
@@ -172,9 +190,49 @@ export function SearchableCombobox({
   }
 
   return (
-    <div ref={containerRef} className="relative w-full min-w-0 max-w-full">
-      <div ref={anchorRef} className="relative w-full min-w-0 max-w-full">
-        <Input
+    <div ref={containerRef} className={cn('relative w-full min-w-0 max-w-full', className)}>
+      <div
+        ref={anchorRef}
+        className={cn(
+          'flex min-h-10 w-full min-w-0 max-w-full flex-wrap items-center gap-1 rounded-lg border border-input bg-background px-2 py-1.5 text-sm shadow-sm transition-colors',
+          'focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/30',
+          disabled && 'cursor-not-allowed opacity-50',
+        )}
+        onMouseDown={(event) => {
+          if (disabled) {
+            return
+          }
+
+          if (event.target === inputRef.current) {
+            return
+          }
+
+          event.preventDefault()
+          inputRef.current?.focus()
+          openList()
+        }}
+      >
+        {selectedOptions.map((option) => (
+          <span
+            key={option.value}
+            className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+          >
+            <span className="max-w-[8rem] truncate sm:max-w-[12rem]">{option.label}</span>
+            {!disabled ? (
+              <button
+                type="button"
+                className="rounded-sm text-primary/70 transition-colors hover:text-primary"
+                aria-label={`Remove ${option.label}`}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => removeValue(option.value)}
+              >
+                <X className="size-3" aria-hidden="true" />
+              </button>
+            ) : null}
+          </span>
+        ))}
+
+        <input
           ref={inputRef}
           id={id}
           type="text"
@@ -188,32 +246,36 @@ export function SearchableCombobox({
               ? `${listboxId}-option-${filteredOptions[highlightedIndex].value}`
               : undefined
           }
-          value={displayValue}
-          placeholder={placeholder}
+          value={query}
+          placeholder={selectedOptions.length === 0 ? placeholder : undefined}
           disabled={disabled}
           autoComplete="off"
+          className={cn(
+            'min-w-0 flex-1 basis-0 border-0 bg-transparent px-1 py-1 outline-none placeholder:text-muted-foreground sm:min-w-[5rem]',
+            disabled && 'cursor-not-allowed',
+          )}
           onFocus={openList}
-          onClick={openList}
           onChange={(event) => {
             setQuery(event.target.value)
             setHighlightedIndex(0)
             setIsOpen(true)
           }}
           onKeyDown={handleKeyDown}
-          className={cn('min-w-0 w-full truncate', showClear ? 'pr-16' : 'pr-10')}
         />
-        {showClear ? (
+
+        {showClearAll ? (
           <button
             type="button"
-            className="absolute top-1/2 right-8 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
-            aria-label="Clear selection"
+            className="rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Clear all selections"
             onMouseDown={(event) => event.preventDefault()}
-            onClick={clearSelection}
+            onClick={clearAll}
           >
             <X className="size-4" aria-hidden="true" />
           </button>
         ) : null}
-        <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+
+        <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
       </div>
 
       <ComboboxDropdownPortal
@@ -221,6 +283,7 @@ export function SearchableCombobox({
         isOpen={isOpen && !disabled}
         listboxRef={listboxRef}
         id={listboxId}
+        multiselectable
       >
         {filteredOptions.length === 0 ? (
           <li className="px-3 py-2 text-sm text-muted-foreground">
@@ -228,7 +291,7 @@ export function SearchableCombobox({
           </li>
         ) : (
           filteredOptions.map((option, index) => {
-            const isSelected = option.value === value
+            const isSelected = value.includes(option.value)
             const isHighlighted = index === highlightedIndex
 
             return (
@@ -238,16 +301,36 @@ export function SearchableCombobox({
                 role="option"
                 aria-selected={isSelected}
                 className={cn(
-                  'flex cursor-pointer items-center justify-between px-3 py-2 text-sm',
+                  'flex items-center px-3 py-2 text-sm',
+                  showCheckboxes ? 'gap-2' : 'cursor-pointer justify-between',
                   isHighlighted && 'bg-accent text-accent-foreground',
                   isSelected && !isHighlighted && 'font-medium',
                 )}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => selectOption(option)}
+                onClick={showCheckboxes ? undefined : () => toggleOption(option)}
               >
-                <span className="min-w-0 truncate">{option.label}</span>
-                {isSelected ? <Check className="size-4 shrink-0" /> : null}
+                {showCheckboxes ? (
+                  <>
+                    <Checkbox
+                      checked={isSelected}
+                      aria-label={`Select ${option.label}`}
+                      onCheckedChange={() => toggleOption(option)}
+                    />
+                    <button
+                      type="button"
+                      className="min-w-0 flex-1 truncate text-left"
+                      onClick={() => toggleOption(option)}
+                    >
+                      {option.label}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="min-w-0 truncate">{option.label}</span>
+                    {isSelected ? <Check className="size-4 shrink-0" /> : null}
+                  </>
+                )}
               </li>
             )
           })

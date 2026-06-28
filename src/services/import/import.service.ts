@@ -5,6 +5,7 @@ import type {
   ImportMutationResult,
   ImportSettings,
   ImportValidationError,
+  RankingPayload,
   SalesAchievementPayload,
   StoreDisplayPayload,
   StorePayload,
@@ -55,14 +56,20 @@ export async function fetchImportSettings(): Promise<ImportSettings> {
 
 export async function confirmSnapshotImport(input: {
   uploadedBy: string
-  displayFileName: string
-  achFileName: string
-  displayHash: string
-  achHash: string
+  fileName: string
+  displayHash: string | null
+  achHash: string | null
+  rankingHash: string | null
   validationReport: Record<string, unknown>
   stores: StorePayload[]
   storeDisplay: StoreDisplayPayload[]
   salesAchievement: SalesAchievementPayload[]
+  ranking: RankingPayload[]
+  importFlags: {
+    display: boolean
+    ach: boolean
+    ranking: boolean
+  }
 }): Promise<ImportMutationResult> {
   const uploadedBy = nullIfEmptyUuid(input.uploadedBy)
   if (!uploadedBy) {
@@ -76,14 +83,19 @@ export async function confirmSnapshotImport(input: {
 
   const { data, error } = await supabase.rpc('confirm_snapshot_import', {
     p_uploaded_by: uploadedBy,
-    p_file_name: `${input.displayFileName} + ${input.achFileName}`,
+    p_file_name: input.fileName,
     p_storage_path: null,
     p_display_hash: input.displayHash,
     p_ach_hash: input.achHash,
+    p_ranking_hash: input.rankingHash,
     p_validation_report: input.validationReport,
     p_stores: input.stores,
     p_store_display: input.storeDisplay,
     p_sales_achievement: input.salesAchievement,
+    p_ranking: input.ranking,
+    p_import_display: input.importFlags.display,
+    p_import_ach: input.importFlags.ach,
+    p_import_ranking: input.importFlags.ranking,
   })
 
   if (error) {
@@ -103,10 +115,10 @@ export async function confirmSnapshotImport(input: {
 
 export async function logFailedImport(input: {
   uploadedBy: string
-  displayFileName: string
-  achFileName: string
-  displayHash?: string
-  achHash?: string
+  fileName: string
+  displayHash?: string | null
+  achHash?: string | null
+  rankingHash?: string | null
   validationErrors: ImportValidationError[]
   errorLog?: Record<string, unknown>
 }): Promise<void> {
@@ -119,7 +131,7 @@ export async function logFailedImport(input: {
 
   await supabase.rpc('log_failed_import', {
     p_uploaded_by: uploadedBy,
-    p_file_name: `${input.displayFileName} + ${input.achFileName}`,
+    p_file_name: input.fileName,
     p_storage_path: null,
     p_display_hash: input.displayHash ?? null,
     p_ach_hash: input.achHash ?? null,

@@ -23,15 +23,17 @@ export function ImportPreviewPanel({ preview }: ImportPreviewPanelProps) {
       </CardHeader>
       <CardContent>
         {preview ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <PreviewStat label="Display Rows" value={preview.displayRowCount} />
             <PreviewStat label="ACH Rows" value={preview.achRowCount} />
+            <PreviewStat label="Ranking Rows" value={preview.rankingRowCount} />
             <PreviewStat label="Stores" value={preview.storeCount} />
             <PreviewStat label="Products" value={preview.productCount} />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Upload and validate both Excel files to see the import preview.
+            Upload and validate the daily visit workbook to see the import
+            preview.
           </p>
         )}
       </CardContent>

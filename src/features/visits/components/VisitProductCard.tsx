@@ -10,7 +10,6 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { getProductsForBrand } from '@/services/visits'
-import { getImportedProductStatus } from '@/features/visits/utils/auto-add-products'
 import type {
   BranchProduct,
   VisitProductDraft,
@@ -123,15 +122,12 @@ export function VisitProductCard({
     }
 
     const branchProduct = branchProducts.find((item) => item.id === productId)
-    const importedStatus = branchProduct
-      ? getImportedProductStatus(branchProduct)
-      : ''
 
     onChange({
       ...product,
       productId,
       brand: branchProduct?.brand ?? product.brand,
-      status: importedStatus || product.status,
+      status: product.status,
       isAutoAdded: false,
     })
   }
@@ -184,11 +180,6 @@ export function VisitProductCard({
               <span className="text-sm font-semibold sm:text-base">
                 {selectedProduct?.product_name || `Product #${index + 1}`}
               </span>
-              {product.isAutoAdded ? (
-                <Badge variant="secondary" className="rounded-full">
-                  Auto Added
-                </Badge>
-              ) : null}
               {isIncomplete ? (
                 <Badge variant="secondary" className="rounded-full">
                   Incomplete
@@ -277,7 +268,7 @@ export function VisitProductCard({
               onChange={handleProductChange}
               placeholder="Search product..."
               disabled={!hasBranch}
-              clearable={!product.isAutoAdded}
+              clearable
               emptyMessage="No product found"
               aria-label="Search product"
             />

@@ -144,6 +144,26 @@
     min-width: 0;
     max-width: 100%;
   }
+
+  .ranking-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .ranking-page [data-slot='card'],
+  .ranking-page [data-slot='card-header'],
+  .ranking-page [data-slot='card-content'],
+  .ranking-page [data-slot='card-title'],
+  .ranking-page [data-slot='card-description'],
+  .ranking-page [data-slot='input'],
+  .ranking-page [data-slot='table-container'] {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

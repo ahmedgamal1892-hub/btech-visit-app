@@ -8,6 +8,7 @@ import {
   DashboardPage,
   LoginPage,
   NewVisitPage,
+  RankingPage,
   SettingsPage,
   UsersPage,
   VisitSubmitSuccessPage,
@@ -34,6 +35,7 @@ export function AppRouter() {
           <Route path="/new-visit" element={<NewVisitPage />} />
           <Route path="/visit-history" element={<VisitHistoryPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/ranking" element={<RankingPage />} />
           <Route
             path="/visit-history/:visitId"
             element={<VisitDetailsPage />}
