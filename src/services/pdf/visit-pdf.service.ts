@@ -582,6 +582,7 @@ function drawGeneralNotes(
   drawAccentLeftCard(doc, MARGIN, cursor.y, CONTENT_WIDTH, cardHeight)
 
   doc.setTextColor(...COLORS.textBody)
+  console.log('GENERAL NOTES RAW:', notesText)
   drawPdfMixedTextInBox(
     doc,
     notesText,

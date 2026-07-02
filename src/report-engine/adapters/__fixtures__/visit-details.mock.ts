@@ -1,0 +1,112 @@
+import type { VisitDetails } from '@/types/visit-details'
+
+export const mockVisitDetails: VisitDetails = {
+  visitId: 'visit-001',
+  visitNumber: 'VIS-20260626-0001',
+  branchName: 'Main Branch — Cairo',
+  branchId: 'branch-001',
+  visitorId: 'user-001',
+  visitorName: 'Ahmed Hassan',
+  visitDate: '2026-06-26T08:00:00.000Z',
+  submittedAt: '2026-06-26T10:00:00.000Z',
+  status: 'Submitted',
+  reviewNotes: null,
+  reviewDecision: null,
+  reviewedAt: null,
+  reviewedByName: null,
+  isReadOnly: true,
+  canReview: false,
+  canCreateFollowUp: true,
+  canDelete: false,
+  parentVisitId: null,
+  generalNotes:
+    'ملاحظات عامة على الزيارة.\n• تأكيد توفر AQD1070D 497 XEX\nFollow-up required for damaged LG unit.',
+  pdfReportReference: 'VIS-20260626-0001',
+  performance: [
+    {
+      brand: 'Samsung',
+      mtdTarget: 100_000,
+      actualSales: 92_500,
+      achievementPercent: 92.5,
+    },
+    {
+      brand: 'LG',
+      mtdTarget: 80_000,
+      actualSales: 58_400,
+      achievementPercent: 73,
+    },
+    {
+      brand: 'Ariston',
+      mtdTarget: 45_000,
+      actualSales: 31_200,
+      achievementPercent: 69.3,
+    },
+  ],
+  inspectionItems: [
+    {
+      id: 'item-2',
+      brand: 'Samsung',
+      productName: 'Samsung QLED 55" Q80C',
+      status: 'Display',
+      statusLabel: 'Display',
+      notes: 'Demo unit powered on.',
+      displayOrder: 2,
+    },
+    {
+      id: 'item-1',
+      brand: 'Ariston',
+      productName: 'AQD1070D 497 XEX — Ariston Electric Water Heater 50L',
+      status: 'Sellable',
+      statusLabel: 'Sellable',
+      notes: 'المنتج AQD1070D 497 XEX معروض بشكل صحيح — display verified.',
+      displayOrder: 1,
+    },
+    {
+      id: 'item-3',
+      brand: 'LG',
+      productName: 'LG Refrigerator GR-X257CSAV',
+      status: 'Damaged',
+      statusLabel: 'Damaged',
+      notes: null,
+      displayOrder: 3,
+    },
+  ],
+  photos: [
+    {
+      id: 'photo-2',
+      fileName: 'Ariston shelf.jpg',
+      storagePath: 'visits/photo-2.jpg',
+      previewUrl: 'https://example.com/photo-2.jpg',
+      sortOrder: 2,
+    },
+    {
+      id: 'photo-1',
+      fileName: 'Store front.jpg',
+      storagePath: 'visits/photo-1.jpg',
+      previewUrl: 'https://example.com/photo-1.jpg',
+      sortOrder: 1,
+    },
+  ],
+  timeline: [
+    {
+      eventType: 'created',
+      eventAt: '2026-06-26T08:30:00.000Z',
+      eventLabel: 'Visit created',
+      userId: 'user-001',
+      userName: 'Ahmed Hassan',
+    },
+  ],
+  relatedVisits: [],
+}
+
+export const mockFollowUpVisitDetails: VisitDetails = {
+  ...mockVisitDetails,
+  visitId: 'visit-002',
+  visitNumber: 'VIS-20260627-0002',
+  parentVisitId: 'visit-001',
+  status: 'Draft',
+  performance: [],
+  inspectionItems: [],
+  photos: [],
+  generalNotes: null,
+}

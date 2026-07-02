@@ -1,0 +1,1 @@
+export { VisitReportTemplate } from './VisitReportTemplate'

@@ -14,6 +14,8 @@ import {
   VisitSubmitSuccessPage,
   VisitDetailsPage,
   VisitHistoryPage,
+  VisitReportPage,
+  VisitReportPreviewPage,
   ReportsPage,
 } from '@/pages'
 
@@ -39,6 +41,11 @@ export function AppRouter() {
           <Route
             path="/visit-history/:visitId"
             element={<VisitDetailsPage />}
+          />
+          <Route path="/visits/:visitId/report" element={<VisitReportPage />} />
+          <Route
+            path="/visit-history/:visitId/report-preview"
+            element={<VisitReportPreviewPage />}
           />
 
           <Route element={<AdminRoute />}>

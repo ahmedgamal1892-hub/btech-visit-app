@@ -3,10 +3,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { AlertBanner, PageHeader } from '@/components/common'
+import {
+  getNotesAsHtml,
+  getNotesAsPlainText,
+  NotesDebugPreview,
+  RichTextNotesEditor,
+  type NotesContent,
+} from '@/components/editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import {
   BranchBrandPerformanceCard,
@@ -127,6 +133,7 @@ export function NewVisitPage() {
   )
   const [visitPhotos, setVisitPhotos] = useState<VisitPhotoDraft[]>([])
   const [generalNotes, setGeneralNotes] = useState('')
+  const [generalNotesHtml, setGeneralNotesHtml] = useState('')
   const [actionMessage, setActionMessage] = useState<string | null>(null)
   const [showValidationSummary, setShowValidationSummary] = useState(false)
   const [expandedSections, setExpandedSections] = useState(
@@ -347,8 +354,15 @@ export function NewVisitPage() {
     setExpandedProductId(null)
     setVisitPhotos([])
     setGeneralNotes('')
+    setGeneralNotesHtml('')
     setActionMessage(null)
     setShowValidationSummary(false)
+    markDirty()
+  }
+
+  function handleGeneralNotesChange(content: NotesContent) {
+    setGeneralNotes(getNotesAsPlainText(content))
+    setGeneralNotesHtml(getNotesAsHtml(content))
     markDirty()
   }
 
@@ -709,14 +723,17 @@ export function NewVisitPage() {
             >
               <div className="space-y-2">
                 <Label htmlFor="general-notes">Notes</Label>
-                <Textarea
+                <RichTextNotesEditor
                   id="general-notes"
-                  value={generalNotes}
+                  plainText={generalNotes}
+                  html={generalNotesHtml}
                   placeholder="Enter general visit notes..."
-                  onChange={(event) => {
-                    setGeneralNotes(event.target.value)
-                    markDirty()
-                  }}
+                  onChange={handleGeneralNotesChange}
+                />
+                <NotesDebugPreview
+                  label="General Notes"
+                  html={generalNotesHtml}
+                  plainText={generalNotes}
                 />
               </div>
             </NewVisitCollapsibleSection>

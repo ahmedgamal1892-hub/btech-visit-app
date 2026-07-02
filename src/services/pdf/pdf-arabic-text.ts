@@ -99,17 +99,28 @@ export function drawPdfMixedTextInBox(
   fontSize = 10,
 ) {
   const displayText = preparePdfMixedText(text)
+
+  if (!displayText) {
+    return
+  }
+
   const isArabic = containsArabic(displayText)
+  const lineHeight = fontSize * 0.45
+  const textX = isArabic ? boxLeft + boxWidth : boxLeft
+  const align = isArabic ? 'right' : 'left'
+  const textOptions = getPdfTextOptions(displayText)
 
   doc.setFont(getPdfFontFamily(displayText), 'normal')
   doc.setFontSize(fontSize)
 
-  const textX = isArabic ? boxLeft + boxWidth : boxLeft
+  const lines = doc.splitTextToSize(displayText, boxWidth) as string[]
 
-  doc.text(displayText, textX, boxTop, {
-    maxWidth: boxWidth,
-    align: isArabic ? 'right' : 'left',
-    ...getPdfTextOptions(displayText),
+  lines.forEach((line, index) => {
+    doc.setFont(getPdfFontFamily(line), 'normal')
+    doc.text(line, textX, boxTop + index * lineHeight, {
+      align,
+      ...textOptions,
+    })
   })
 }
 

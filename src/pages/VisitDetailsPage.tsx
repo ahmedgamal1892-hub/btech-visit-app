@@ -1,4 +1,4 @@
-import { ArrowLeft, Download, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, Eye, Loader2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
@@ -225,6 +225,12 @@ export function VisitDetailsPage() {
                 Download PDF
               </>
             )}
+          </Button>
+          <Button type="button" variant="outline" asChild>
+            <Link to={`/visits/${data.visitId}/report`}>
+              <Eye className="size-4" />
+              View Report
+            </Link>
           </Button>
           {data.canDelete ? (
             <Button

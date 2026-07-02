@@ -1,0 +1,60 @@
+.rich-text-notes-editor__body {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.rich-text-notes-editor .ProseMirror {
+  min-height: 6rem;
+  height: auto;
+  outline: none;
+  unicode-bidi: plaintext;
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.rich-text-notes-editor .ProseMirror p {
+  margin: 0.2em 0;
+}
+
+.rich-text-notes-editor .ProseMirror p[dir='rtl'] {
+  text-align: right;
+}
+
+.rich-text-notes-editor .ProseMirror p[dir='ltr'] {
+  text-align: left;
+}
+
+.rich-text-notes-editor .ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+.rich-text-notes-editor .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-notes-editor .ProseMirror ul,
+.rich-text-notes-editor .ProseMirror ol {
+  margin: 0.35em 0;
+  padding-inline-start: 1.25rem;
+}
+
+.rich-text-notes-editor .ProseMirror ul {
+  list-style-type: disc;
+}
+
+.rich-text-notes-editor .ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.rich-text-notes-editor .ProseMirror:focus {
+  outline: none;
+}
+
+.rich-text-notes-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  float: inline-start;
+  height: 0;
+  pointer-events: none;
+}

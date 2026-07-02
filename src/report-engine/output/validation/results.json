@@ -1,0 +1,74 @@
+[
+  {
+    "scenario": "arabic-only",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\arabic-only.html"
+  },
+  {
+    "scenario": "english-only",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\english-only.html"
+  },
+  {
+    "scenario": "mixed-ar-en",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\mixed-ar-en.html"
+  },
+  {
+    "scenario": "product-models",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\product-models.html"
+  },
+  {
+    "scenario": "long-general-notes",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\long-general-notes.html"
+  },
+  {
+    "scenario": "rich-text-notes",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\rich-text-notes.html"
+  },
+  {
+    "scenario": "twenty-plus-items",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\twenty-plus-items.html"
+  },
+  {
+    "scenario": "fifteen-plus-photos",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\fifteen-plus-photos.html"
+  },
+  {
+    "scenario": "empty-notes",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\empty-notes.html"
+  },
+  {
+    "scenario": "empty-photos",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\empty-photos.html"
+  },
+  {
+    "scenario": "different-statuses",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\different-statuses.html"
+  },
+  {
+    "scenario": "multiple-brands",
+    "status": "PASS",
+    "issue": "",
+    "html": "src\\report-engine\\output\\validation\\multiple-brands.html"
+  }
+]

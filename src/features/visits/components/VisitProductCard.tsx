@@ -1,13 +1,19 @@
 import { Camera, ChevronDown, ImageIcon, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
+import {
+  getNotesAsHtml,
+  getNotesAsPlainText,
+  NotesDebugPreview,
+  RichTextNotesEditor,
+  type NotesContent,
+} from '@/components/editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { SearchableCombobox } from '@/components/ui/searchable-combobox'
 import { Select } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { getProductsForBrand } from '@/services/visits'
 import type {
@@ -56,6 +62,21 @@ export function VisitProductCard({
   const [brandFilterActive, setBrandFilterActive] = useState(
     () => Boolean(product.brand && !product.productId),
   )
+  const [productNotesHtml, setProductNotesHtml] = useState('')
+
+  useEffect(() => {
+    if (!product.notes.trim() && productNotesHtml) {
+      setProductNotesHtml('')
+    }
+  }, [product.notes, productNotesHtml])
+
+  function handleProductNotesChange(content: NotesContent) {
+    setProductNotesHtml(getNotesAsHtml(content))
+    onChange({
+      ...product,
+      notes: getNotesAsPlainText(content),
+    })
+  }
 
   const brandOptions = useMemo(
     () =>
@@ -300,16 +321,17 @@ export function VisitProductCard({
 
           <div className="space-y-2">
             <Label htmlFor={`notes-${product.clientId}`}>Notes</Label>
-            <Textarea
+            <RichTextNotesEditor
               id={`notes-${product.clientId}`}
-              value={product.notes}
+              plainText={product.notes}
+              html={productNotesHtml}
               placeholder="Add product-specific notes..."
-              onChange={(event) =>
-                onChange({
-                  ...product,
-                  notes: event.target.value,
-                })
-              }
+              onChange={handleProductNotesChange}
+            />
+            <NotesDebugPreview
+              label={`Product ${index + 1} Notes`}
+              html={productNotesHtml}
+              plainText={product.notes}
             />
           </div>
 

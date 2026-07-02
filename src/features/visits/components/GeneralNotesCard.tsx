@@ -1,3 +1,12 @@
+import { useState } from 'react'
+
+import {
+  getNotesAsHtml,
+  getNotesAsPlainText,
+  NotesDebugPreview,
+  RichTextNotesEditor,
+  type NotesContent,
+} from '@/components/editor'
 import {
   Card,
   CardContent,
@@ -6,7 +15,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 
 type GeneralNotesCardProps = {
   value: string
@@ -14,6 +22,13 @@ type GeneralNotesCardProps = {
 }
 
 export function GeneralNotesCard({ value, onChange }: GeneralNotesCardProps) {
+  const [notesHtml, setNotesHtml] = useState('')
+
+  function handleNotesChange(content: NotesContent) {
+    setNotesHtml(getNotesAsHtml(content))
+    onChange(getNotesAsPlainText(content))
+  }
+
   return (
     <Card className="rounded-2xl border-border/70 shadow-sm">
       <CardHeader>
@@ -24,11 +39,17 @@ export function GeneralNotesCard({ value, onChange }: GeneralNotesCardProps) {
       </CardHeader>
       <CardContent className="space-y-2">
         <Label htmlFor="general-notes">Notes</Label>
-        <Textarea
+        <RichTextNotesEditor
           id="general-notes"
-          value={value}
+          plainText={value}
+          html={notesHtml}
           placeholder="Enter general visit notes..."
-          onChange={(event) => onChange(event.target.value)}
+          onChange={handleNotesChange}
+        />
+        <NotesDebugPreview
+          label="General Notes"
+          html={notesHtml}
+          plainText={value}
         />
       </CardContent>
     </Card>
