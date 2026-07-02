@@ -1,5 +1,7 @@
 import { chromium as playwrightChromium } from 'playwright-core'
 
+import { waitForReportImages } from './wait-for-report-images'
+
 async function launchBrowser() {
   if (process.env.VERCEL) {
     const chromium = (await import('@sparticuz/chromium')).default
@@ -29,8 +31,10 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
     const page = await browser.newPage()
 
     await page.setContent(html, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
     })
+
+    await waitForReportImages(page)
 
     await page.emulateMedia({ media: 'print' })
 
@@ -39,10 +43,10 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
       printBackground: true,
       preferCSSPageSize: true,
       margin: {
-        top: '12mm',
-        right: '12mm',
-        bottom: '12mm',
-        left: '12mm',
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0',
       },
     })
 

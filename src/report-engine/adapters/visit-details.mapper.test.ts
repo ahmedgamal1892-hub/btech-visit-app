@@ -66,7 +66,7 @@ describe('mapVisitDetailsToReportViewModel', () => {
     const viewModel = mapVisitDetailsToReportViewModel(mockVisitDetails)
 
     expect(viewModel.generalNotesHtml).toContain('AQD1070D 497 XEX')
-    expect(viewModel.generalNotesHtml).toContain('<ul>')
+    expect(viewModel.generalNotesHtml).toContain('<ul dir="rtl">')
     expect(viewModel.generalNotesHtml).toContain('dir="rtl"')
   })
 

@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-07-02T11:48:01.414Z",
+  "visitId": "e8a6e68b-6419-4613-9593-aada38827f5a",
+  "visitUrl": "http://localhost:5173/visit-history/e8a6e68b-6419-4613-9593-aada38827f5a",
+  "authTokenFound": true,
+  "steps": [
+    {
+      "step": "browser_console_error",
+      "at": "2026-07-02T11:48:06.539Z",
+      "text": "Failed to load resource: the server responded with a status of 400 ()"
+    },
+    {
+      "step": "browser_console_error",
+      "at": "2026-07-02T11:48:06.704Z",
+      "text": "Failed to load resource: the server responded with a status of 400 ()"
+    },
+    {
+      "step": "browser_console_error",
+      "at": "2026-07-02T11:48:06.842Z",
+      "text": "Failed to load resource: the server responded with a status of 400 ()"
+    },
+    {
+      "step": "button_state_before_click",
+      "at": "2026-07-02T11:48:12.256Z",
+      "visible": true,
+      "enabled": true
+    },
+    {
+      "step": "button_click_fired",
+      "at": "2026-07-02T11:48:12.256Z",
+      "clicked": true
+    },
+    {
+      "step": "ui_after_click",
+      "at": "2026-07-02T11:48:27.304Z",
+      "pendingText": false,
+      "successToast": false,
+      "errorToastTitle": false,
+      "errorToastBody": null
+    }
+  ],
+  "network": {
+    "get_visit_details": [
+      {
+        "phase": "request",
+        "method": "POST",
+        "url": "https://cdflwrrmplbhugjosphn.supabase.co/rest/v1/rpc/get_visit_details",
+        "postData": {
+          "p_visit_id": "e8a6e68b-6419-4613-9593-aada38827f5a"
+        }
+      },
+      {
+        "phase": "response",
+        "status": 200,
+        "ok": true,
+        "visitNumber": "VIS-20260630-0001",
+        "error": null
+      },
+      {
+        "phase": "request",
+        "method": "POST",
+        "url": "https://cdflwrrmplbhugjosphn.supabase.co/rest/v1/rpc/get_visit_details",
+        "postData": {
+          "p_visit_id": "e8a6e68b-6419-4613-9593-aada38827f5a"
+        }
+      },
+      {
+        "phase": "response",
+        "status": 200,
+        "ok": true,
+        "visitNumber": "VIS-20260630-0001",
+        "error": null
+      }
+    ],
+    "api_pdf": [
+      {
+        "phase": "request",
+        "method": "POST",
+        "url": "http://localhost:5173/api/pdf",
+        "postDataBytes": 13783
+      },
+      {
+        "phase": "response",
+        "status": 200,
+        "ok": true,
+        "contentType": "application/pdf",
+        "bodyPreview": null
+      }
+    ]
+  },
+  "downloadEvent": {
+    "suggestedFilename": "VIS-20260630-0001.pdf",
+    "url": "blob:http://localhost:5173/f0d04769-f1d8-45f2-a26c-c90f18192b50"
+  },
+  "inferred": {
+    "mutateAsyncCalled": true,
+    "downloadVisitPdfByIdCalled": true,
+    "fetchVisitDetailsSuccessful": true,
+    "postApiPdfSent": true,
+    "apiPdfResponse": {
+      "phase": "response",
+      "status": 200,
+      "ok": true,
+      "contentType": "application/pdf",
+      "bodyPreview": null
+    },
+    "browserReceivedBlob": true,
+    "downloadStarted": true
+  }
+}

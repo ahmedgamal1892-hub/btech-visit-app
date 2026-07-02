@@ -24,7 +24,8 @@ export function PhotoGrid({ photos }: PhotoGridProps) {
               className="report-photo-grid__image"
               src={photo.src}
               alt={photo.alt}
-              loading="lazy"
+              loading="eager"
+              decoding="sync"
             />
             <figcaption className="report-photo-grid__caption">
               <ReportMixedText text={photo.alt} />

@@ -24,6 +24,14 @@ function paragraphHtml(line: string, defaultDirection: 'rtl' | 'ltr' = 'rtl'): s
   return `<p dir="${direction}" style="text-align: ${align}">${escapeHtml(line)}</p>`
 }
 
+function ensureRtlListMarkup(html: string): string {
+  return html.replace(/<(ul|ol)\b(?![^>]*\bdir=)/gi, '<$1 dir="rtl"')
+}
+
+function openListTag(tag: 'ul' | 'ol', direction: 'rtl' | 'ltr'): string {
+  return `<${tag} dir="${direction}">`
+}
+
 function plainTextGeneralNotesToHtml(plainText: string): string {
   const lines = plainText.split('\n')
   const parts: string[] = []
@@ -43,7 +51,7 @@ function plainTextGeneralNotesToHtml(plainText: string): string {
   }
 
   for (const line of lines) {
-    const bulletMatch = line.match(/^•\s+(.*)$/)
+    const bulletMatch = line.match(/^(?:•|\*)\s+(.*)$/)
     const orderedMatch = line.match(/^\d+\.\s+(.*)$/)
 
     if (bulletMatch) {
@@ -52,7 +60,9 @@ function plainTextGeneralNotesToHtml(plainText: string): string {
       }
 
       if (!inBulletList) {
-        parts.push('<ul>')
+        const content = bulletMatch[1] ?? ''
+        const direction = detectParagraphDirection(content, 'rtl')
+        parts.push(openListTag('ul', direction))
         inBulletList = true
       }
 
@@ -70,7 +80,9 @@ function plainTextGeneralNotesToHtml(plainText: string): string {
       }
 
       if (!inOrderedList) {
-        parts.push('<ol>')
+        const content = orderedMatch[1] ?? ''
+        const direction = detectParagraphDirection(content, 'rtl')
+        parts.push(openListTag('ol', direction))
         inOrderedList = true
       }
 
@@ -104,7 +116,7 @@ export function resolveGeneralNotesHtml(
   }
 
   if (looksLikeHtml(generalNotes)) {
-    return generalNotes.trim()
+    return ensureRtlListMarkup(generalNotes.trim())
   }
 
   return plainTextGeneralNotesToHtml(generalNotes.trim())

@@ -3,6 +3,8 @@ import { dirname } from 'node:path'
 
 import { chromium } from 'playwright'
 
+import { waitForReportImages } from '../../../production-pdf-spike/wait-for-report-images'
+
 export type GeneratePdfFromHtmlOptions = {
   html: string
   outputPath: string
@@ -31,8 +33,10 @@ export async function generatePdfFromHtml({
     const page = await browser.newPage()
 
     await page.setContent(html, {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
     })
+
+    await waitForReportImages(page)
 
     await page.emulateMedia({ media: 'print' })
 
@@ -42,10 +46,10 @@ export async function generatePdfFromHtml({
       printBackground: true,
       preferCSSPageSize: true,
       margin: {
-        top: '12mm',
-        right: '12mm',
-        bottom: '12mm',
-        left: '12mm',
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0',
       },
     })
 
