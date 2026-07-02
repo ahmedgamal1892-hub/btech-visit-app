@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "report-engine:sample-pdf": "node src/report-engine/scripts/generate-sample-pdf.mjs",
     "dev:vercel": "vercel dev",
+    "dev:pdf-api": "node production-pdf-spike/scripts/local-api-server.mjs",
     "test:report-engine": "vitest run --config src/report-engine/vitest.config.ts"
   },
   "dependencies": {

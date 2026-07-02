@@ -49,6 +49,7 @@ import {
   getPdfLogoRenderSize,
 } from './pdf-logo'
 import { prepareVisitPhotoForPdf } from './pdf-photo-presentation'
+import { generateVisitPdfFromHtmlEngine } from './visit-html-pdf.service'
 
 const PHOTO_COLUMNS = 3
 const PHOTO_GAP = 4
@@ -651,7 +652,7 @@ export async function generateVisitPdf(details: VisitDetails): Promise<Blob> {
 }
 
 export async function downloadVisitPdf(details: VisitDetails): Promise<void> {
-  const blob = await generateVisitPdf(details)
+  const blob = await generateVisitPdfFromHtmlEngine(details)
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
