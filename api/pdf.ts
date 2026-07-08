@@ -104,6 +104,11 @@ export default async function handler(
     const message =
       error instanceof Error ? error.message : 'PDF generation failed'
 
-    res.status(500).json({ error: message })
+      console.error(error)
+
+      res.status(500).json({
+        error: message,
+        stack: error instanceof Error ? error.stack : null,
+      })
   }
 }
