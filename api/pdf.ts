@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { generateVisitReportPdfBuffer } from './pdf-handler.js'
 
 import { generateVisitReportPdfBuffer } from './pdf-handler'
 import type { ReportViewModel } from '../src/report-engine/models/report-view-model'
