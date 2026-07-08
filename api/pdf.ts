@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { generateVisitReportPdfBuffer } from '../server/pdf/pdf-handler.js'
-import type { ReportViewModel } from '../src/report-engine/models/report-view-model.js'
+import {
+  generateVisitReportPdfBuffer,
+  type ReportViewModel,
+} from '../server/pdf/renderer.js'
 
 export const config = {
   maxDuration: 30,

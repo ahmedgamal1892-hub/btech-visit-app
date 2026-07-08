@@ -6,7 +6,7 @@ import { createServer as createViteServer } from 'vite'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = join(__dirname, '../..')
-const pdfHandlerPath = join(projectRoot, 'server', 'pdf', 'pdf-handler.ts')
+const pdfHandlerPath = join(projectRoot, 'server', 'pdf', 'renderer.ts')
 
 const port = Number(process.env.PORT ?? 3000)
 

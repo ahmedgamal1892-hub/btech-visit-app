@@ -9,7 +9,7 @@ async function launchBrowser() {
     return playwrightChromium.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: true,
     })
   }
 

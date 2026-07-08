@@ -27,5 +27,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
-  "exclude": ["src/report-engine/server", "src/report-engine/**/*.test.ts"]
+  "exclude": ["server/pdf", "src/report-engine/server", "src/report-engine/**/*.test.ts"]
 }
