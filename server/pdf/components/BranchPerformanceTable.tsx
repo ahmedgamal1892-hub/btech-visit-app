@@ -1,7 +1,7 @@
-import type { ReportPerformanceRow } from '../types'
+import type { ReportPerformanceRow } from '../types.js'
 
-import { ReportBadge } from './ReportBadge'
-import { ReportDirectionalText, ReportMixedText } from './ReportMixedText'
+import { ReportBadge } from './ReportBadge.js'
+import { ReportDirectionalText, ReportMixedText } from './ReportMixedText.js'
 
 type BranchPerformanceTableProps = {
   rows: ReportPerformanceRow[]

@@ -1,7 +1,7 @@
-import type { ReportInspectionItem } from '../types'
+import type { ReportInspectionItem } from '../types.js'
 
-import { ReportBadge } from './ReportBadge'
-import { ReportMixedText } from './ReportMixedText'
+import { ReportBadge } from './ReportBadge.js'
+import { ReportMixedText } from './ReportMixedText.js'
 
 type InspectionTableProps = {
   items: ReportInspectionItem[]

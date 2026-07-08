@@ -7,8 +7,8 @@ import {
   ReportHeader,
   SectionCard,
   VisitInformationCard,
-} from './components'
-import type { ReportViewModel } from './types'
+} from './components/index.js'
+import type { ReportViewModel } from './types.js'
 
 type VisitReportTemplateProps = {
   data: ReportViewModel

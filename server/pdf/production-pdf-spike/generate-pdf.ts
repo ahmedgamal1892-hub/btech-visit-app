@@ -1,6 +1,6 @@
 import { chromium as playwrightChromium } from 'playwright-core'
 
-import { waitForReportImages } from './wait-for-report-images'
+import { waitForReportImages } from './wait-for-report-images.js'
 
 async function launchBrowser() {
   if (process.env.VERCEL) {

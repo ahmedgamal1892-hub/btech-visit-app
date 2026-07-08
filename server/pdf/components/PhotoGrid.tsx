@@ -1,6 +1,6 @@
-import type { ReportPhoto } from '../types'
+import type { ReportPhoto } from '../types.js'
 
-import { ReportMixedText } from './ReportMixedText'
+import { ReportMixedText } from './ReportMixedText.js'
 
 type PhotoGridProps = {
   photos: ReportPhoto[]

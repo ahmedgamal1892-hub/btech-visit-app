@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { ReportMixedText } from './ReportMixedText'
+import { ReportMixedText } from './ReportMixedText.js'
 
 type ReportInfoFieldProps = {
   label: string

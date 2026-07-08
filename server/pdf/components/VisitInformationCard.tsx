@@ -1,7 +1,7 @@
-import type { ReportBadgeTone } from '../types'
+import type { ReportBadgeTone } from '../types.js'
 
-import { ReportBadge } from './ReportBadge'
-import { ReportInfoField } from './ReportInfoField'
+import { ReportBadge } from './ReportBadge.js'
+import { ReportInfoField } from './ReportInfoField.js'
 
 type VisitInformationCardProps = {
   branchName: string

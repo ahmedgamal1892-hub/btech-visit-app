@@ -5,11 +5,11 @@ import { fileURLToPath } from 'node:url'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
-import { generatePdfFromHtml } from './production-pdf-spike/generate-pdf'
-import { VisitReportTemplate } from './template'
-import type { ReportViewModel } from './types'
+import { generatePdfFromHtml } from './production-pdf-spike/generate-pdf.js'
+import { VisitReportTemplate } from './template.js'
+import type { ReportViewModel } from './types.js'
 
-export type { ReportViewModel } from './types'
+export type { ReportViewModel } from './types.js'
 
 const serverDir = dirname(fileURLToPath(import.meta.url))
 const projectRoot = join(serverDir, '../..')

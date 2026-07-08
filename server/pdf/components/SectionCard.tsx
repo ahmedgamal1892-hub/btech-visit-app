@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { SectionTitle } from './SectionTitle'
+import { SectionTitle } from './SectionTitle.js'
 
 type SectionIcon = 'performance' | 'inspection' | 'photos'
 

@@ -1,4 +1,4 @@
-import { ReportDirectionalText } from './ReportMixedText'
+import { ReportDirectionalText } from './ReportMixedText.js'
 
 type ReportFooterProps = {
   footerText: string

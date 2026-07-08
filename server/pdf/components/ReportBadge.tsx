@@ -1,6 +1,6 @@
-import type { ReportBadgeTone } from '../types'
+import type { ReportBadgeTone } from '../types.js'
 
-import { ReportMixedText } from './ReportMixedText'
+import { ReportMixedText } from './ReportMixedText.js'
 
 type ReportBadgeProps = {
   label: string

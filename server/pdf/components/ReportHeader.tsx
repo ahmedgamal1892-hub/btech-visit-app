@@ -1,4 +1,4 @@
-import { ReportDirectionalText, ReportMixedText } from './ReportMixedText'
+import { ReportDirectionalText, ReportMixedText } from './ReportMixedText.js'
 
 type ReportHeaderProps = {
   appName: string
