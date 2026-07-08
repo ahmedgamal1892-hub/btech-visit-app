@@ -3,7 +3,7 @@ import { dirname } from 'node:path'
 
 import { chromium } from 'playwright'
 
-import { waitForReportImages } from '../../../production-pdf-spike/wait-for-report-images'
+import { waitForReportImages } from '../../../server/pdf/production-pdf-spike/wait-for-report-images'
 
 export type GeneratePdfFromHtmlOptions = {
   html: string
