@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
   generateVisitReportPdfBuffer,
   type ReportViewModel,
-} from './pdf/renderer.js'
+} from './pdf/renderer.bundle.js'
 
 export const config = {
   maxDuration: 30,

@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "node scripts/clear-vite-cache.mjs",
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/build-pdf-engine.mjs && tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
