@@ -36,6 +36,12 @@ copyFileSync(
   join(root, 'api/pdf/Cairo-Regular.ttf'),
 )
 
+// نسخ اللوجو إلى نفس مكان الـ PDF Bundle
+copyFileSync(
+  join(root, 'public/logo.png'),
+  join(root, 'api/pdf/logo.png'),
+)
+
 writeFileSync(
   typesFile,
   `export type { ReportViewModel } from './types.js'
