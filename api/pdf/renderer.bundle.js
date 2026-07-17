@@ -1,14 +1,14 @@
-// api/pdf/renderer.ts
+// server/pdf/renderer.ts
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-// api/pdf/production-pdf-spike/generate-pdf.ts
+// server/pdf/production-pdf-spike/generate-pdf.ts
 import { chromium as playwrightChromium } from "playwright-core";
 
-// api/pdf/production-pdf-spike/wait-for-report-images.ts
+// server/pdf/production-pdf-spike/wait-for-report-images.ts
 var IMAGE_TIMEOUT_MS = 2e4;
 async function waitForImageLocator(page, selector, index = 0) {
   const locator = page.locator(selector).nth(index);
@@ -105,7 +105,7 @@ async function waitForReportImages(page) {
   });
 }
 
-// api/pdf/production-pdf-spike/generate-pdf.ts
+// server/pdf/production-pdf-spike/generate-pdf.ts
 async function launchBrowser() {
   if (process.env.VERCEL) {
     const chromium = (await import("@sparticuz/chromium")).default;
@@ -151,7 +151,7 @@ async function generatePdfFromHtml(html) {
   }
 }
 
-// api/pdf/components/ReportMixedText.tsx
+// server/pdf/components/ReportMixedText.tsx
 import { jsx } from "react/jsx-runtime";
 function ReportMixedText({ text }) {
   return /* @__PURE__ */ jsx("bdi", { dir: "auto", children: text });
@@ -163,13 +163,13 @@ function ReportDirectionalText({
   return /* @__PURE__ */ jsx("span", { dir: direction, children: text });
 }
 
-// api/pdf/components/ReportBadge.tsx
+// server/pdf/components/ReportBadge.tsx
 import { jsx as jsx2 } from "react/jsx-runtime";
 function ReportBadge({ label, tone }) {
   return /* @__PURE__ */ jsx2("span", { className: `report-badge report-badge--${tone}`, children: /* @__PURE__ */ jsx2(ReportMixedText, { text: label }) });
 }
 
-// api/pdf/components/BranchPerformanceTable.tsx
+// server/pdf/components/BranchPerformanceTable.tsx
 import { jsx as jsx3, jsxs } from "react/jsx-runtime";
 function BranchPerformanceTable({ rows }) {
   if (rows.length === 0) {
@@ -197,7 +197,7 @@ function BranchPerformanceTable({ rows }) {
   ] }) });
 }
 
-// api/pdf/components/GeneralNotesCard.tsx
+// server/pdf/components/GeneralNotesCard.tsx
 import { jsx as jsx4 } from "react/jsx-runtime";
 function GeneralNotesCard({ html }) {
   if (!html.trim()) {
@@ -213,7 +213,7 @@ function GeneralNotesCard({ html }) {
   ) });
 }
 
-// api/pdf/components/InspectionTable.tsx
+// server/pdf/components/InspectionTable.tsx
 import { jsx as jsx5, jsxs as jsxs2 } from "react/jsx-runtime";
 function InspectionTable({ items }) {
   if (items.length === 0) {
@@ -241,7 +241,7 @@ function InspectionTable({ items }) {
   ] }) });
 }
 
-// api/pdf/components/PhotoGrid.tsx
+// server/pdf/components/PhotoGrid.tsx
 import { jsx as jsx6, jsxs as jsxs3 } from "react/jsx-runtime";
 function PhotoGrid({ photos }) {
   if (photos.length === 0) {
@@ -262,7 +262,7 @@ function PhotoGrid({ photos }) {
   ] }) }, photo.id)) });
 }
 
-// api/pdf/components/ReportFooter.tsx
+// server/pdf/components/ReportFooter.tsx
 import { jsx as jsx7, jsxs as jsxs4 } from "react/jsx-runtime";
 function ReportFooter({ footerText, generatedAt }) {
   return /* @__PURE__ */ jsxs4("footer", { className: "report-footer", dir: "ltr", children: [
@@ -275,7 +275,7 @@ function ReportFooter({ footerText, generatedAt }) {
   ] });
 }
 
-// api/pdf/components/ReportHeader.tsx
+// server/pdf/components/ReportHeader.tsx
 import { jsx as jsx8, jsxs as jsxs5 } from "react/jsx-runtime";
 function ReportHeader({
   appName,
@@ -315,7 +315,7 @@ function ReportHeader({
   ] });
 }
 
-// api/pdf/components/ReportInfoField.tsx
+// server/pdf/components/ReportInfoField.tsx
 import { jsx as jsx9, jsxs as jsxs6 } from "react/jsx-runtime";
 function renderFieldValue(value) {
   if (typeof value === "string") {
@@ -330,7 +330,7 @@ function ReportInfoField({ label, value }) {
   ] });
 }
 
-// api/pdf/components/SectionTitle.tsx
+// server/pdf/components/SectionTitle.tsx
 import { jsx as jsx10, jsxs as jsxs7 } from "react/jsx-runtime";
 function SectionTitle({ title, icon }) {
   const className = icon ? `report-section__title report-section__title--${icon}` : "report-section__title";
@@ -340,7 +340,7 @@ function SectionTitle({ title, icon }) {
   ] });
 }
 
-// api/pdf/components/SectionCard.tsx
+// server/pdf/components/SectionCard.tsx
 import { jsx as jsx11, jsxs as jsxs8 } from "react/jsx-runtime";
 function SectionCard({
   title,
@@ -360,7 +360,7 @@ function SectionCard({
   );
 }
 
-// api/pdf/components/VisitInformationCard.tsx
+// server/pdf/components/VisitInformationCard.tsx
 import { jsx as jsx12, jsxs as jsxs9 } from "react/jsx-runtime";
 function VisitInformationCard({
   branchName,
@@ -387,7 +387,7 @@ function VisitInformationCard({
   ] });
 }
 
-// api/pdf/template.tsx
+// server/pdf/template.tsx
 import { jsx as jsx13, jsxs as jsxs10 } from "react/jsx-runtime";
 function VisitReportTemplate({ data }) {
   return /* @__PURE__ */ jsx13("div", { className: "report-engine", children: /* @__PURE__ */ jsxs10("article", { className: "report-page", children: [
@@ -429,7 +429,7 @@ function VisitReportTemplate({ data }) {
   ] }) });
 }
 
-// api/pdf/renderer.ts
+// server/pdf/renderer.ts
 var serverDir = dirname(fileURLToPath(import.meta.url));
 var projectRoot = join(serverDir, "../..");
 function readProjectFile(relativePath) {

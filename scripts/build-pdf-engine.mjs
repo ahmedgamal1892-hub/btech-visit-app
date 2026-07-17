@@ -10,7 +10,7 @@ const outFile = join(root, 'api/pdf/renderer.bundle.js')
 const typesFile = join(root, 'api/pdf/renderer.bundle.d.ts')
 
 await esbuild.build({
-  entryPoints: [join(root, 'api/pdf/renderer.ts')],
+  entryPoints: [join(root, 'server/pdf/renderer.ts')],
   outfile: outFile,
   platform: 'node',
   format: 'esm',
