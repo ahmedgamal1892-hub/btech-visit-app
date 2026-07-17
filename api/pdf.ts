@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
   generateVisitReportPdfBuffer,
@@ -46,6 +49,7 @@ function isReportViewModel(value: unknown): value is ReportViewModel {
   }
 
   const candidate = value as Partial<ReportViewModel>
+
   return (
     typeof candidate.visitNumber === 'string' &&
     typeof candidate.reportTitle === 'string'
@@ -89,9 +93,28 @@ export default async function handler(
     const reportViewModel = readReportViewModel(req.body)
 
     if (!reportViewModel) {
-      res.status(400).json({ error: 'A valid reportViewModel is required.' })
+      res.status(400).json({
+        error: 'A valid reportViewModel is required.',
+      })
       return
     }
+
+    // ===== DEBUG =====
+    console.log('========== PDF DEBUG ==========')
+    console.log('Current working directory:', process.cwd())
+
+    console.log(
+      'Renderer bundle exists:',
+      existsSync(join(process.cwd(), 'api/pdf/renderer.bundle.js')),
+    )
+
+    console.log(
+      'Logo exists:',
+      existsSync(join(process.cwd(), 'api/pdf/logo.png')),
+    )
+
+    console.log('===============================')
+    // =================
 
     const pdf = await generateVisitReportPdfBuffer(reportViewModel)
 
@@ -100,16 +123,17 @@ export default async function handler(
       'Content-Disposition',
       `inline; filename="${reportViewModel.visitNumber}.pdf"`,
     )
+
     res.status(200).send(pdf)
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'PDF generation failed'
 
-      console.error(error)
+    console.error(error)
 
-      res.status(500).json({
-        error: message,
-        stack: error instanceof Error ? error.stack : null,
-      })
+    res.status(500).json({
+      error: message,
+      stack: error instanceof Error ? error.stack : null,
+    })
   }
 }

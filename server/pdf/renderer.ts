@@ -26,8 +26,21 @@ function enrichReportViewModel(data: ReportViewModel): ReportViewModel {
   let logoSrc = data.logoSrc
 
   try {
-    logoSrc = toDataUrl(readProjectFile('public/logo.png'), 'image/png')
-  } catch {
+    const logoBuffer = readFileSync(join(serverDir, 'logo.png'))
+
+    console.log('====================================')
+    console.log('Logo loaded successfully')
+    console.log('Logo path:', join(serverDir, 'logo.png'))
+    console.log('Logo size:', logoBuffer.length)
+    console.log('====================================')
+
+    logoSrc = toDataUrl(logoBuffer, 'image/png')
+  } catch (error) {
+    console.error('====================================')
+    console.error('Logo loading failed')
+    console.error(error)
+    console.error('====================================')
+
     logoSrc = data.logoSrc
   }
 
