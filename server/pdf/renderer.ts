@@ -42,8 +42,8 @@ function enrichReportViewModel(data: ReportViewModel): ReportViewModel {
 }
 
 function buildFontFaceCss(): string {
-  const cairoBase64 = readProjectFile(
-    'public/fonts/Cairo-Regular.ttf',
+  const cairoBase64 = readFileSync(
+    join(serverDir, 'Cairo-Regular.ttf'),
   ).toString('base64')
 
   return `

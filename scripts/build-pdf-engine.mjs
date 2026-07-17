@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { copyFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -29,6 +29,12 @@ await esbuild.build({
   },
   jsx: 'automatic',
 })
+
+// نسخ الخط إلى نفس مكان الـ PDF Bundle
+copyFileSync(
+  join(root, 'src/assets/fonts/Cairo-Regular.ttf'),
+  join(root, 'api/pdf/Cairo-Regular.ttf'),
+)
 
 writeFileSync(
   typesFile,
