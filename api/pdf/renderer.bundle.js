@@ -276,7 +276,7 @@ function ReportFooter({ footerText, generatedAt }) {
 }
 
 // server/pdf/components/ReportHeader.tsx
-import { jsx as jsx8, jsxs as jsxs5 } from "react/jsx-runtime";
+import { Fragment, jsx as jsx8, jsxs as jsxs5 } from "react/jsx-runtime";
 function ReportHeader({
   appName,
   tagline,
@@ -288,15 +288,47 @@ function ReportHeader({
 }) {
   return /* @__PURE__ */ jsxs5("header", { className: "report-header", children: [
     /* @__PURE__ */ jsxs5("div", { className: "report-header__brand", children: [
-      logoSrc ? /* @__PURE__ */ jsx8(
-        "img",
-        {
-          className: "report-header__logo-image",
-          src: logoSrc,
-          alt: logoAlt
-        }
-      ) : /* @__PURE__ */ jsx8("div", { className: "report-header__logo", "aria-hidden": "true", children: /* @__PURE__ */ jsx8("span", { className: "report-header__logo-label", children: "Logo" }) }),
+      logoSrc ? /* @__PURE__ */ jsxs5(Fragment, { children: [
+        /* @__PURE__ */ jsx8(
+          "img",
+          {
+            className: "report-header__logo-image",
+            src: logoSrc,
+            alt: logoAlt
+          }
+        ),
+        /* @__PURE__ */ jsxs5(
+          "div",
+          {
+            style: {
+              fontSize: "8px",
+              color: "red",
+              maxWidth: "250px",
+              wordBreak: "break-all",
+              lineHeight: 1.2,
+              marginTop: "4px"
+            },
+            children: [
+              "DEBUG:",
+              /* @__PURE__ */ jsx8("br", {}),
+              logoSrc.substring(0, 120)
+            ]
+          }
+        )
+      ] }) : /* @__PURE__ */ jsx8("div", { className: "report-header__logo", "aria-hidden": "true", children: /* @__PURE__ */ jsx8("span", { className: "report-header__logo-label", children: "Logo" }) }),
       /* @__PURE__ */ jsxs5("div", { className: "report-header__brand-copy", dir: "ltr", children: [
+        /* @__PURE__ */ jsx8(
+          "p",
+          {
+            style: {
+              color: "red",
+              fontSize: "28px",
+              fontWeight: "bold",
+              margin: 0
+            },
+            children: "TEST HEADER"
+          }
+        ),
         /* @__PURE__ */ jsx8("p", { className: "report-header__app-name", children: appName }),
         /* @__PURE__ */ jsx8("p", { className: "report-header__tagline", children: tagline }),
         /* @__PURE__ */ jsx8("p", { className: "report-header__report-title", children: reportTitle })
@@ -431,7 +463,6 @@ function VisitReportTemplate({ data }) {
 
 // server/pdf/renderer.ts
 var serverDir = dirname(fileURLToPath(import.meta.url));
-var projectRoot = join(serverDir, "../..");
 function toDataUrl(buffer, mimeType) {
   return `data:${mimeType};base64,${buffer.toString("base64")}`;
 }

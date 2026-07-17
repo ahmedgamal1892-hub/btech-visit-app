@@ -23,19 +23,50 @@ export function ReportHeader({
     <header className="report-header">
       <div className="report-header__brand">
         {logoSrc ? (
-          <img
-            className="report-header__logo-image"
-            src={logoSrc}
-            alt={logoAlt}
-          />
+          <>
+            <img
+              className="report-header__logo-image"
+              src={logoSrc}
+              alt={logoAlt}
+            />
+
+            <div
+              style={{
+                fontSize: '8px',
+                color: 'red',
+                maxWidth: '250px',
+                wordBreak: 'break-all',
+                lineHeight: 1.2,
+                marginTop: '4px',
+              }}
+            >
+              DEBUG:
+              <br />
+              {logoSrc.substring(0, 120)}
+            </div>
+          </>
         ) : (
           <div className="report-header__logo" aria-hidden="true">
             <span className="report-header__logo-label">Logo</span>
           </div>
         )}
+
         <div className="report-header__brand-copy" dir="ltr">
+          <p
+            style={{
+              color: 'red',
+              fontSize: '28px',
+              fontWeight: 'bold',
+              margin: 0,
+            }}
+          >
+            TEST HEADER
+          </p>
+
           <p className="report-header__app-name">{appName}</p>
+
           <p className="report-header__tagline">{tagline}</p>
+
           <p className="report-header__report-title">{reportTitle}</p>
         </div>
       </div>
@@ -47,6 +78,7 @@ export function ReportHeader({
             <ReportMixedText text={visitNumber} />
           </dd>
         </div>
+
         <div className="report-header__meta-item">
           <dt className="report-header__meta-label">Visit Date</dt>
           <dd className="report-header__meta-value">

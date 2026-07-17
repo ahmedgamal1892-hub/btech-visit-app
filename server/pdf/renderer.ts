@@ -12,11 +12,6 @@ import type { ReportViewModel } from './types.js'
 export type { ReportViewModel } from './types.js'
 
 const serverDir = dirname(fileURLToPath(import.meta.url))
-const projectRoot = join(serverDir, '../..')
-
-function readProjectFile(relativePath: string): Buffer {
-  return readFileSync(join(projectRoot, relativePath))
-}
 
 function toDataUrl(buffer: Buffer, mimeType: string): string {
   return `data:${mimeType};base64,${buffer.toString('base64')}`
